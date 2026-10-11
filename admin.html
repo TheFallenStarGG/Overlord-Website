@@ -7,6 +7,29 @@
   <meta name="robots" content="noindex" />
   <meta name="theme-color" content="#e0b84a" />
   <link rel="stylesheet" href="styles.css" />
+  <style>
+    .sub { margin: 1.2rem 0 0.4rem; font-size: 0.8rem; letter-spacing: 0.07em; text-transform: uppercase; color: var(--gold); }
+    .field { display: grid; gap: 0.35rem; margin: 0.7rem 0; font-weight: 650; color: var(--muted); }
+    .field input, .field textarea { width: 100%; min-height: 2.75rem; padding: 0.6rem 0.85rem; font: inherit; font-size: 1rem; color: var(--text); background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-strong); border-radius: 12px; }
+    .field textarea { min-height: 5rem; resize: vertical; }
+    .field input:focus, .field textarea:focus { outline: none; border-color: var(--gold); }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.7rem; }
+    .btn-danger { background: linear-gradient(135deg, #fca5a5, #f87171 45%, #c44536); }
+    .item { margin: 0.5rem 0; padding: 0.7rem 0.85rem; background: rgba(0, 0, 0, 0.28); border: 1px solid var(--border); border-left: 4px solid var(--accent, var(--gold)); border-radius: 12px; }
+    .item.info { --accent: #5865f2; }
+    .item.warn { --accent: var(--amber); }
+    .item.error { --accent: var(--red); }
+    .item-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.2rem 0.6rem; }
+    .item-head strong { overflow-wrap: anywhere; }
+    .item small { color: var(--faint); }
+    .item p { margin: 0.3rem 0 0; font-size: 0.92rem; color: var(--muted); overflow-wrap: anywhere; white-space: pre-wrap; }
+    .fields { display: flex; flex-wrap: wrap; gap: 0.25rem 0.9rem; margin-top: 0.4rem; font-size: 0.84rem; color: var(--muted); overflow-wrap: anywhere; }
+    .fields b { color: var(--faint); font-weight: 600; }
+    .switch-row { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; padding: 0.6rem 0; border-bottom: 1px solid var(--border); }
+    .switch-row:last-child { border-bottom: 0; }
+    .switch-row > div { min-width: 0; overflow-wrap: anywhere; }
+    .pick { display: grid; gap: 0.5rem; margin: 0.6rem 0; }
+  </style>
 </head>
 <body>
   <script src="data.js"></script>
@@ -15,7 +38,7 @@
     <section class="card hero compact">
       <p class="eyebrow">Private</p>
       <h1>Admin</h1>
-      <p class="lead">Owner and allowlisted admins only. Bot logs + admin list.</p>
+      <p class="lead">Owner and allowlisted admins only.</p>
       <div class="cta-row">
         <button type="button" class="btn" id="login">Log in with Discord</button>
         <button type="button" class="btn btn-secondary" id="logout" hidden>Log out</button>
@@ -29,28 +52,152 @@
     </div>
 
     <div id="panel" hidden>
-      <section class="card">
-        <h2 class="section-title">Admins</h2>
-        <p class="section-sub" id="admin-hint">Only the owner can add or remove people.</p>
-        <ul class="feature-list" id="admin-list"></ul>
-        <form id="add-form" class="cmd-table" hidden>
-          <label>
-            Discord user ID
-            <input name="id" type="text" inputmode="numeric" placeholder="17–20 digit ID" required />
-          </label>
-          <button class="btn" type="submit">Add admin</button>
-        </form>
-        <p class="meta" id="admin-msg"></p>
+      <div class="tabs" id="tabs" role="tablist"></div>
+
+      <!-- Overview -->
+      <section id="tab-overview">
+        <div class="card">
+          <h2 class="section-title">Bot overview <span class="count" id="ov-age">—</span></h2>
+          <div class="stats" id="ov-stats"></div>
+          <p class="meta" id="ov-note"></p>
+        </div>
+        <div class="card">
+          <h2 class="section-title">Today</h2>
+          <div class="stats" id="ov-today"></div>
+          <h3 class="sub">Top commands</h3>
+          <div class="cmd-table" id="ov-cmds"></div>
+          <h3 class="sub">Top errors</h3>
+          <div class="cmd-table" id="ov-errs"></div>
+        </div>
       </section>
 
-      <section class="card">
-        <h2 class="section-title">Bot logs</h2>
-        <p class="meta" id="logs-meta">—</p>
-        <button type="button" class="btn btn-secondary" id="refresh-logs">Refresh</button>
-        <div id="logs" class="cmd-table" style="margin-top: 1rem;"></div>
+      <!-- Logs -->
+      <section id="tab-logs" hidden>
+        <div class="card">
+          <h2 class="section-title">Bot logs</h2>
+          <div class="chips" id="log-levels"></div>
+          <div class="pick">
+            <select class="select" id="log-cat"><option value="">All categories</option></select>
+            <input class="search" id="log-q" type="search" placeholder="Search logs…" />
+          </div>
+          <div class="btn-row">
+            <button type="button" class="btn btn-sm" id="refresh-logs">Refresh</button>
+            <button type="button" class="btn btn-sm btn-secondary" id="auto-logs">Auto-refresh: off</button>
+          </div>
+          <p class="meta" id="logs-meta">—</p>
+          <div id="logs"></div>
+          <div class="btn-row"><button type="button" class="btn btn-sm btn-secondary" id="more-logs" hidden>Load older</button></div>
+        </div>
+      </section>
+
+      <!-- Inbox -->
+      <section id="tab-inbox" hidden>
+        <div class="card">
+          <h2 class="section-title">Reports &amp; feedback</h2>
+          <div class="tabs flush" id="inbox-tabs"></div>
+          <p class="meta tight" id="inbox-meta">—</p>
+          <div id="inbox"></div>
+        </div>
+      </section>
+
+      <!-- Servers -->
+      <section id="tab-servers" hidden>
+        <div class="card">
+          <h2 class="section-title">Servers <span class="count" id="srv-count">0</span></h2>
+          <div class="pick"><input class="search" id="srv-q" type="search" placeholder="Search by name or ID…" /></div>
+          <div id="srv-list"></div>
+        </div>
+      </section>
+
+      <!-- Economy -->
+      <section id="tab-economy" hidden>
+        <div class="card">
+          <h2 class="section-title">Economy tools</h2>
+          <p class="section-sub">Look up a player, then adjust their coins. Every change is saved in the audit log.</p>
+          <label class="field">Server <select class="select" id="eco-guild"></select></label>
+          <label class="field">Discord user ID <input id="eco-user" type="text" inputmode="numeric" placeholder="17–20 digit ID" /></label>
+          <div class="btn-row"><button type="button" class="btn btn-sm" id="eco-lookup">Look up</button></div>
+          <p class="meta" id="eco-msg"></p>
+          <div id="eco-result"></div>
+          <div id="eco-edit" hidden>
+            <label class="field">Amount (coins) <input id="eco-amount" type="text" inputmode="numeric" placeholder="e.g. 500" /></label>
+            <div class="btn-row">
+              <button type="button" class="btn btn-sm" id="eco-add">Add</button>
+              <button type="button" class="btn btn-sm btn-secondary" id="eco-remove">Remove</button>
+              <button type="button" class="btn btn-sm btn-secondary" id="eco-set">Set to</button>
+            </div>
+          </div>
+          <p class="meta" id="eco-note"></p>
+        </div>
+      </section>
+
+      <!-- Controls -->
+      <section id="tab-controls" hidden>
+        <div class="card">
+          <h2 class="section-title">Maintenance mode <span id="mt-pill"></span></h2>
+          <p class="section-sub">While it's on, everyone except the owner gets a friendly "under maintenance" reply.</p>
+          <label class="field">Message shown to users (optional) <input id="mt-msg" type="text" maxlength="200" placeholder="Back in about 10 minutes" /></label>
+          <div class="btn-row">
+            <button type="button" class="btn btn-sm btn-danger" id="mt-on">Turn on</button>
+            <button type="button" class="btn btn-sm btn-secondary" id="mt-off">Turn off</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2 class="section-title">Global command switches <span class="count" id="cmd-count">0 off</span></h2>
+          <p class="section-sub">Turn a command off in every server until you fix it. Help, settings and setup commands are protected.</p>
+          <div class="pick"><input class="search" id="cmd-q" type="search" placeholder="Search commands…" /></div>
+          <div id="cmd-list"></div>
+        </div>
+
+        <div class="card">
+          <h2 class="section-title">Blacklist</h2>
+          <p class="section-sub">Blocked users can't use the bot. Blocking a server makes the bot leave it.</p>
+          <div id="bl-list"></div>
+          <h3 class="sub">Add</h3>
+          <label class="field">Type
+            <select class="select" id="bl-kind"><option value="user">User</option><option value="server">Server</option></select>
+          </label>
+          <label class="field">ID <input id="bl-id" type="text" inputmode="numeric" placeholder="17–20 digit ID" /></label>
+          <label class="field">Reason <input id="bl-reason" type="text" maxlength="200" placeholder="Optional" /></label>
+          <div class="btn-row"><button type="button" class="btn btn-sm btn-danger" id="bl-add">Blacklist</button></div>
+        </div>
+
+        <div class="card" id="bc-card">
+          <h2 class="section-title">Broadcast</h2>
+          <p class="section-sub">Posts an announcement in every server's events channel (no pings).</p>
+          <label class="field">Title <input id="bc-title" type="text" maxlength="100" /></label>
+          <label class="field">Message <textarea id="bc-text" maxlength="2000"></textarea></label>
+          <div class="btn-row"><button type="button" class="btn btn-sm" id="bc-send">Send to all servers</button></div>
+        </div>
+      </section>
+
+      <!-- Audit -->
+      <section id="tab-audit" hidden>
+        <div class="card">
+          <h2 class="section-title">Audit log</h2>
+          <p class="meta tight" id="audit-meta">—</p>
+          <div id="audit-list"></div>
+        </div>
+      </section>
+
+      <!-- Admins -->
+      <section id="tab-admins" hidden>
+        <div class="card">
+          <h2 class="section-title">Admins</h2>
+          <p class="section-sub" id="admin-hint">Only the owner can add or remove people.</p>
+          <ul class="feature-list" id="admin-list"></ul>
+          <form id="add-form" hidden>
+            <label class="field">Discord user ID <input name="id" type="text" inputmode="numeric" placeholder="17–20 digit ID" required /></label>
+            <div class="btn-row"><button class="btn btn-sm" type="submit">Add admin</button></div>
+          </form>
+          <p class="meta" id="admin-msg"></p>
+        </div>
       </section>
     </div>
   </main>
+
+  <div class="toast" id="toast"></div>
 
   <script>
     // *** YOUR WORKER URL — no trailing slash ***
@@ -58,6 +205,55 @@
     const TOKEN_KEY = "overlord_admin_token";
 
     const $ = (id) => document.getElementById(id);
+
+    // ---------- Small helpers ----------
+
+    function h(tag, props, ...kids) {
+      const e = document.createElement(tag);
+      for (const [k, v] of Object.entries(props || {})) {
+        if (v === false || v === null || v === undefined) continue;
+        if (k === "class") e.className = v;
+        else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
+        else e.setAttribute(k, v === true ? "" : v);
+      }
+      for (const kid of kids.flat()) {
+        if (kid === null || kid === undefined || kid === false) continue;
+        e.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+      }
+      return e;
+    }
+    function clear(node) {
+      while (node.firstChild) node.removeChild(node.firstChild);
+      return node;
+    }
+    const pill = (text, kind) => h("span", { class: "pill " + (kind || "") }, text);
+    const fmtNum = (n) => Number(n || 0).toLocaleString("en-US");
+    const when = (ts) => new Date(ts).toLocaleString();
+    function span(ms) {
+      const s = Math.max(0, Math.round(ms / 1000));
+      if (s < 60) return s + "s";
+      const m = Math.floor(s / 60);
+      if (m < 60) return m + "m";
+      const hr = Math.floor(m / 60);
+      if (hr < 48) return hr + "h";
+      return Math.floor(hr / 24) + "d";
+    }
+    function fmtDur(sec) {
+      sec = Math.max(0, Math.floor(sec));
+      const d = Math.floor(sec / 86400), hr = Math.floor((sec % 86400) / 3600), m = Math.floor((sec % 3600) / 60);
+      return d ? d + "d " + hr + "h" : hr ? hr + "h " + m + "m" : m + "m";
+    }
+    let toastTimer;
+    function toast(msg) {
+      const t = $("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove("show"), 4000);
+    }
+    const stat = (label, value, cls) => h("div", { class: "stat" }, h("b", { class: cls || "" }, String(value)), h("span", null, label));
+
+    // ---------- Session + API ----------
 
     function getToken() {
       return localStorage.getItem(TOKEN_KEY) || "";
@@ -96,68 +292,465 @@
       location.href = "admin.html";
     };
 
-    function renderAdmins(admins, isOwner) {
-      const list = $("admin-list");
-      list.innerHTML = "";
-      for (const a of admins) {
-        const li = document.createElement("li");
-        li.textContent = a.id + (a.role === "owner" ? " (owner)" : " (admin)");
-        if (isOwner && a.role !== "owner") {
-          const btn = document.createElement("button");
-          btn.type = "button";
-          btn.className = "btn btn-secondary";
-          btn.style.marginLeft = "0.5rem";
-          btn.textContent = "Remove";
-          btn.onclick = async () => {
-            $("admin-msg").textContent = "Removing…";
-            try {
-              const r = await api("/api/admins", { method: "DELETE", body: JSON.stringify({ id: a.id }) });
-              renderAdmins(r.admins, true);
-              $("admin-msg").textContent = "Removed.";
-            } catch (e) {
-              $("admin-msg").textContent = e.message;
-            }
-          };
-          li.appendChild(btn);
-        }
-        list.appendChild(li);
+    let me = null;
+    let S = {}; // the latest { state, updated, now } from the worker
+    let current = "overview";
+
+    // ---------- Tabs ----------
+
+    const TABS = [
+      ["overview", "📊 Overview"],
+      ["logs", "📜 Logs"],
+      ["inbox", "📬 Inbox"],
+      ["servers", "🏰 Servers"],
+      ["economy", "💰 Economy"],
+      ["controls", "🛠️ Controls"],
+      ["audit", "🧾 Audit"],
+      ["admins", "👥 Admins"],
+    ];
+
+    function buildTabs() {
+      const box = clear($("tabs"));
+      for (const [id, label] of TABS) {
+        box.appendChild(
+          h("button", { type: "button", class: "tab", role: "tab", "aria-selected": String(id === current), onclick: () => showTab(id) }, label)
+        );
       }
-      $("add-form").hidden = !isOwner;
     }
 
-    async function loadLogs() {
-      $("logs-meta").textContent = "Loading…";
-      const box = $("logs");
-      box.innerHTML = "";
+    function showTab(id) {
+      current = id;
+      buildTabs();
+      for (const [tid] of TABS) $("tab-" + tid).hidden = tid !== id;
+      if (["overview", "servers", "economy", "controls"].includes(id)) loadState();
+      if (id === "logs" && !logState.items.length) loadLogs(false);
+      if (id === "inbox") loadInbox();
+      if (id === "audit") loadAudit();
+    }
+
+    // ---------- Bot data (overview, servers, controls) ----------
+
+    async function loadState() {
       try {
-        const { logs, fetchedAt } = await api("/api/logs");
-        $("logs-meta").textContent = "Fetched " + new Date(fetchedAt).toLocaleString() + " · " + logs.length + " messages";
-        for (const log of logs) {
-          const row = document.createElement("div");
-          const when = new Date(log.at).toLocaleString();
-          const title = log.title || log.author || "Log";
-          const body = log.description || log.content || "";
-          row.innerHTML = "";
-          const left = document.createElement("strong");
-          left.textContent = title;
-          const right = document.createElement("span");
-          right.textContent = when;
-          const desc = document.createElement("div");
-          desc.style.gridColumn = "1 / -1";
-          desc.className = "meta";
-          desc.textContent = (body || log.footer || "").slice(0, 500);
-          row.appendChild(left);
-          row.appendChild(right);
-          row.appendChild(desc);
-          box.appendChild(row);
+        S = await api("/api/state");
+        renderAll();
+      } catch (e) {
+        $("ov-note").textContent = "Couldn't load bot data: " + e.message;
+      }
+    }
+
+    function renderAll() {
+      renderOverview();
+      renderServers();
+      renderEcoServers();
+      renderControls();
+    }
+
+    function renderOverview() {
+      const st = S.state || {};
+      const o = st.overview;
+      const stats = clear($("ov-stats"));
+      const today = clear($("ov-today"));
+      clear($("ov-cmds"));
+      clear($("ov-errs"));
+      if (!o) {
+        $("ov-age").textContent = "no data";
+        $("ov-note").textContent = "The bot hasn't published its status yet. Check that it's online and has the admin bridge update.";
+        return;
+      }
+      const age = (S.now || Date.now()) - ((S.updated && S.updated.overview) || 0);
+      const stale = age > 120000;
+      $("ov-age").textContent = "updated " + span(age) + " ago";
+      $("ov-note").textContent = stale ? "⚠️ The bot hasn't reported in for a while. It may be offline." : "Refreshes about every 30 seconds.";
+      const m = (st.settings && st.settings.maintenance) || {};
+      const dbOk = o.database && o.database.connected && !o.database.lastError;
+
+      stats.append(
+        stat("Servers", fmtNum(o.servers)),
+        stat("Members", fmtNum(o.members)),
+        stat("Ping", o.pingMs + " ms"),
+        stat("Uptime", fmtDur(o.uptimeSec)),
+        stat("Memory", o.memoryMb + " MB"),
+        stat("Commands", fmtNum(o.commandsLoaded)),
+        stat("Database", dbOk ? "OK" : "Problem", dbOk ? "ok" : "bad"),
+        stat("Maintenance", m.on ? "ON" : "off", m.on ? "bad" : "")
+      );
+
+      const t = o.today;
+      if (t) {
+        today.append(
+          stat("Commands run", fmtNum(t.commands)),
+          stat("Errors", fmtNum(t.errors), t.errors ? "bad" : "ok"),
+          stat("Joined / left", "+" + t.joined + " / −" + t.left),
+          stat("Blocked", fmtNum(t.blocked)),
+          stat("Flood hits", fmtNum(t.floods)),
+          stat("Abuse alerts", fmtNum(t.alerts))
+        );
+        for (const [name, n] of t.topCommands) $("ov-cmds").appendChild(h("div", null, h("strong", null, name), h("span", null, "×" + fmtNum(n))));
+        for (const [key, n, last] of t.topErrors) {
+          $("ov-errs").appendChild(h("div", null, h("strong", null, key), h("span", null, n + "× · last " + span((S.now || Date.now()) - last) + " ago")));
         }
-        if (!logs.length) box.textContent = "No messages in the log channel.";
+        if (!t.topCommands.length) $("ov-cmds").textContent = "None yet today.";
+        if (!t.topErrors.length) $("ov-errs").textContent = "No errors 🎉";
+      }
+    }
+
+    // ---------- Logs ----------
+
+    const logState = { items: [], level: "", more: undefined };
+
+    function levelOf(l) {
+      const f = String(l.footer || "").toUpperCase();
+      return f === "ERROR" ? "error" : f === "WARN" ? "warn" : "info";
+    }
+
+    function buildLevelChips() {
+      const box = clear($("log-levels"));
+      for (const [v, label] of [["", "All"], ["info", "Info"], ["warn", "Warnings"], ["error", "Errors"]]) {
+        box.appendChild(
+          h("button", { type: "button", class: "tab", "aria-pressed": String(logState.level === v), onclick: () => { logState.level = v; buildLevelChips(); renderLogs(); } }, label)
+        );
+      }
+    }
+
+    function renderLogs() {
+      const box = clear($("logs"));
+      const cats = [...new Set(logState.items.map((l) => l.author).filter(Boolean))].sort();
+      const sel = $("log-cat");
+      const keep = sel.value;
+      clear(sel);
+      sel.appendChild(h("option", { value: "" }, "All categories"));
+      for (const c of cats) sel.appendChild(h("option", { value: c }, c));
+      sel.value = cats.includes(keep) ? keep : "";
+
+      const q = $("log-q").value.trim().toLowerCase();
+      let shown = 0;
+      for (const l of logState.items) {
+        const lv = levelOf(l);
+        if (logState.level && lv !== logState.level) continue;
+        if (sel.value && l.author !== sel.value) continue;
+        const haystack = [l.title, l.description, l.content, l.author].concat((l.fields || []).map((f) => f.name + " " + f.value)).join(" ").toLowerCase();
+        if (q && !haystack.includes(q)) continue;
+        shown++;
+        const body = (l.description || l.content || "").replace(/```/g, "").slice(0, 600);
+        box.appendChild(
+          h("div", { class: "item " + lv },
+            h("div", { class: "item-head" }, h("strong", null, l.title || l.author || "Log"), h("small", null, when(l.at))),
+            l.author && l.title ? h("small", null, l.author + " · " + lv.toUpperCase()) : null,
+            body ? h("p", null, body) : null,
+            l.fields && l.fields.length
+              ? h("div", { class: "fields" }, l.fields.map((f) => h("span", null, h("b", null, f.name + ": "), String(f.value).replace(/`/g, ""))))
+              : null
+          )
+        );
+      }
+      if (!shown) box.textContent = "No log messages match.";
+      $("logs-meta").textContent = "Showing " + shown + " of " + logState.items.length + " loaded";
+      $("more-logs").hidden = !logState.more;
+    }
+
+    async function loadLogs(older) {
+      $("logs-meta").textContent = "Loading…";
+      try {
+        const before = older && logState.items.length ? logState.items[logState.items.length - 1].id : null;
+        const { logs } = await api("/api/logs?limit=100" + (before ? "&before=" + before : ""));
+        const map = new Map(logState.items.map((l) => [l.id, l]));
+        for (const l of logs) map.set(l.id, l);
+        logState.items = [...map.values()].sort((a, b) => new Date(b.at) - new Date(a.at));
+        if (older) logState.more = logs.length >= 100;
+        else if (logState.more === undefined) logState.more = logs.length >= 100;
+        renderLogs();
       } catch (e) {
         $("logs-meta").textContent = "Error: " + e.message;
       }
     }
 
-    $("refresh-logs").onclick = () => loadLogs();
+    $("refresh-logs").onclick = () => loadLogs(false);
+    $("more-logs").onclick = () => loadLogs(true);
+    $("log-q").oninput = renderLogs;
+    $("log-cat").onchange = renderLogs;
+    let autoTimer = null;
+    $("auto-logs").onclick = () => {
+      if (autoTimer) {
+        clearInterval(autoTimer);
+        autoTimer = null;
+        $("auto-logs").textContent = "Auto-refresh: off";
+      } else {
+        autoTimer = setInterval(() => { if (!document.hidden && current === "logs") loadLogs(false); }, 15000);
+        $("auto-logs").textContent = "Auto-refresh: on (15s)";
+      }
+    };
+
+    // ---------- Inbox ----------
+
+    let inboxKind = "report";
+
+    function buildInboxTabs() {
+      const box = clear($("inbox-tabs"));
+      for (const [k, label] of [["report", "🐞 Reports"], ["feedback", "💡 Feedback"]]) {
+        box.appendChild(h("button", { type: "button", class: "tab", "aria-pressed": String(inboxKind === k), onclick: () => { inboxKind = k; loadInbox(); } }, label));
+      }
+    }
+
+    async function loadInbox() {
+      buildInboxTabs();
+      const box = clear($("inbox"));
+      $("inbox-meta").textContent = "Loading…";
+      try {
+        const { messages } = await api("/api/inbox?kind=" + inboxKind);
+        $("inbox-meta").textContent = messages.length + " most recent. Replies are still sent from Discord with the Reply button.";
+        for (const m of messages) {
+          const replied = (m.fields || []).find((f) => f.name.includes("Last reply"));
+          const rest = (m.fields || []).filter((f) => f.name !== "Context" && !f.name.includes("Last reply"));
+          box.appendChild(
+            h("div", { class: "item " + (replied ? "info" : "warn") },
+              h("div", { class: "item-head" }, h("strong", null, m.title || m.ref || "Message"), h("small", null, when(m.at))),
+              h("p", null, m.text),
+              h("div", { class: "fields" }, rest.map((f) => h("span", null, h("b", null, f.name + ": "), String(f.value).replace(/`/g, "").replace(/\n/g, " · ")))),
+              replied ? h("p", null, "✅ Replied: " + String(replied.value).replace(/<t:\d+:f>\n?/, "").slice(0, 300)) : null
+            )
+          );
+        }
+        if (!messages.length) box.textContent = "Nothing here yet.";
+      } catch (e) {
+        $("inbox-meta").textContent = "Error: " + e.message;
+      }
+    }
+
+    // ---------- Servers ----------
+
+    function renderServers() {
+      const list = clear($("srv-list"));
+      const servers = (S.state && S.state.servers) || [];
+      $("srv-count").textContent = String(servers.length);
+      const q = $("srv-q").value.trim().toLowerCase();
+      for (const s of servers) {
+        if (q && !(s.name.toLowerCase().includes(q) || s.id.includes(q))) continue;
+        list.appendChild(
+          h("div", { class: "item" },
+            h("div", { class: "item-head" }, h("strong", null, s.name), h("small", null, fmtNum(s.members) + " members")),
+            h("div", { class: "fields" },
+              h("span", null, h("b", null, "Players: "), fmtNum(s.players)),
+              h("span", null, h("b", null, "Joined: "), s.joinedAt ? new Date(s.joinedAt).toLocaleDateString() : "?"),
+              h("span", null, h("b", null, "ID: "), h("code", null, s.id))
+            ),
+            h("div", { class: "perm-row" },
+              s.listed ? pill("On website", "ok") : pill("Hidden from website", "warn"),
+              s.blocked ? pill("Blacklisted", "bad") : null,
+              h("button", { type: "button", class: "btn btn-sm btn-secondary", onclick: () => { $("eco-guild").value = s.id; showTab("economy"); } }, "Economy tools")
+            )
+          )
+        );
+      }
+      if (!list.firstChild) list.textContent = servers.length ? "No servers match." : "No data yet.";
+    }
+    $("srv-q").oninput = renderServers;
+
+    // ---------- Economy ----------
+
+    function renderEcoServers() {
+      const sel = $("eco-guild");
+      const keep = sel.value;
+      clear(sel);
+      for (const s of (S.state && S.state.servers) || []) {
+        sel.appendChild(h("option", { value: s.id }, s.name + " (" + fmtNum(s.players) + " players)"));
+      }
+      if (keep) sel.value = keep;
+    }
+
+    async function lookupPlayer() {
+      const guild = $("eco-guild").value;
+      const user = $("eco-user").value.trim();
+      const box = clear($("eco-result"));
+      $("eco-msg").textContent = "";
+      if (!/^\d{17,20}$/.test(user)) {
+        $("eco-msg").textContent = "Enter a 17–20 digit Discord user ID.";
+        return;
+      }
+      $("eco-msg").textContent = "Looking up…";
+      try {
+        const { player: p } = await api("/api/player?guild=" + encodeURIComponent(guild) + "&user=" + encodeURIComponent(user));
+        $("eco-msg").textContent = "";
+        box.appendChild(
+          h("div", { class: "stats" },
+            stat("Coins", fmtNum(p.coins)),
+            stat("Level", p.level + " (" + fmtNum(p.xp) + " XP)"),
+            stat("Prestige", p.prestige),
+            stat("Jobs", fmtNum(p.works)),
+            stat("Daily streak", p.streak),
+            stat("Last daily", p.lastDaily || "never")
+          )
+        );
+        if (p.inventory.length) {
+          box.appendChild(h("p", { class: "meta" }, "Inventory: " + p.inventory.map(([id, n]) => id + " ×" + n).join(", ")));
+        }
+        $("eco-edit").hidden = !(me && me.isOwner);
+        $("eco-note").textContent = me && me.isOwner ? "" : "Only the owner can change balances.";
+      } catch (e) {
+        $("eco-msg").textContent = e.message;
+        $("eco-edit").hidden = true;
+      }
+    }
+    $("eco-lookup").onclick = lookupPlayer;
+
+    async function adjustCoins(mode, verb) {
+      const guildId = $("eco-guild").value;
+      const userId = $("eco-user").value.trim();
+      const amount = Math.floor(Number($("eco-amount").value.replace(/[, ]/g, "")));
+      if (!Number.isFinite(amount) || amount < 0) return toast("Enter a valid amount");
+      if (!confirm(verb + " " + fmtNum(amount) + " coins for user " + userId + "?")) return;
+      const r = await act("coins", { guildId, userId, mode, amount });
+      if (r && r.ok) lookupPlayer();
+    }
+    $("eco-add").onclick = () => adjustCoins("add", "Add");
+    $("eco-remove").onclick = () => adjustCoins("remove", "Remove");
+    $("eco-set").onclick = () => adjustCoins("set", "Set balance to");
+
+    // ---------- Controls ----------
+
+    async function act(action, payload) {
+      toast("Working… (can take a few seconds)");
+      try {
+        const r = await api("/api/action", { method: "POST", body: JSON.stringify({ action, payload }) });
+        toast((r.ok ? "✅ " : "⚠️ ") + (r.result || r.status));
+        await loadState();
+        return r;
+      } catch (e) {
+        toast("❌ " + e.message);
+        return null;
+      }
+    }
+
+    function renderControls() {
+      const st = S.state || {};
+      const settings = st.settings || {};
+      const m = settings.maintenance || {};
+      clear($("mt-pill")).appendChild(m.on ? pill("ON", "bad") : pill("off", "ok"));
+      if (m.on && !$("mt-msg").value) $("mt-msg").value = m.message || "";
+      renderCmds();
+      renderBlacklist();
+    }
+
+    function renderCmds() {
+      const st = S.state || {};
+      const disabled = (st.settings && st.settings.disabled) || {};
+      const list = clear($("cmd-list"));
+      const q = $("cmd-q").value.trim().toLowerCase().replace(/^!!/, "");
+      const cmds = ((st.config && st.config.commands) || []).filter((c) => !q || c.name.includes(q));
+      $("cmd-count").textContent = Object.keys(disabled).length + " off";
+      for (const c of cmds) {
+        const off = Boolean(disabled[c.name]);
+        list.appendChild(
+          h("div", { class: "switch-row" },
+            h("div", null, h("strong", null, "!!" + c.name), " ", off ? pill("OFF", "bad") : pill("on", "ok"), h("div", { class: "meta tight" }, c.description || "")),
+            c.protected
+              ? pill("protected")
+              : h("button", { type: "button", class: "btn btn-sm " + (off ? "" : "btn-secondary"), onclick: () => act("command", { name: c.name, on: off }) }, off ? "Enable" : "Disable")
+          )
+        );
+      }
+      if (!list.firstChild) list.textContent = "No commands match.";
+    }
+    $("cmd-q").oninput = renderCmds;
+
+    function renderBlacklist() {
+      const bl = (S.state && S.state.config && S.state.config.blacklist) || { users: [], guilds: [] };
+      const box = clear($("bl-list"));
+      const add = (kind, rows) => {
+        for (const r of rows) {
+          box.appendChild(
+            h("div", { class: "switch-row" },
+              h("div", null, h("strong", null, (kind === "user" ? "User " : "Server ") + r.id), h("div", { class: "meta tight" }, (r.reason || "No reason") + (r.at ? " · " + when(r.at) : ""))),
+              h("button", { type: "button", class: "btn btn-sm btn-secondary", onclick: () => { if (confirm("Remove " + r.id + " from the blacklist?")) act("blacklist", { op: "remove", kind, id: r.id }); } }, "Remove")
+            )
+          );
+        }
+      };
+      add("user", bl.users);
+      add("server", bl.guilds);
+      if (!box.firstChild) box.textContent = "Nobody is blacklisted.";
+    }
+
+    $("mt-on").onclick = () => {
+      if (confirm("Turn maintenance mode ON? Everyone except you will be blocked from commands.")) act("maintenance", { on: true, message: $("mt-msg").value.trim() });
+    };
+    $("mt-off").onclick = () => act("maintenance", { on: false });
+
+    $("bl-add").onclick = async () => {
+      const kind = $("bl-kind").value;
+      const id = $("bl-id").value.trim();
+      if (!/^\d{17,20}$/.test(id)) return toast("Enter a 17–20 digit ID");
+      if (kind === "server" && !confirm("The bot will leave that server and ignore it from now on. Continue?")) return;
+      const r = await act("blacklist", { op: "add", kind, id, reason: $("bl-reason").value.trim() });
+      if (r && r.ok) {
+        $("bl-id").value = "";
+        $("bl-reason").value = "";
+      }
+    };
+
+    $("bc-send").onclick = async () => {
+      const title = $("bc-title").value.trim();
+      const text = $("bc-text").value.trim();
+      if (!title || !text) return toast("Write a title and a message");
+      if (!confirm("Send this to every server's events channel?")) return;
+      const r = await act("broadcast", { title, text });
+      if (r && r.ok) {
+        $("bc-title").value = "";
+        $("bc-text").value = "";
+      }
+    };
+
+    // ---------- Audit ----------
+
+    async function loadAudit() {
+      const box = clear($("audit-list"));
+      $("audit-meta").textContent = "Loading…";
+      try {
+        const { entries } = await api("/api/audit");
+        $("audit-meta").textContent = entries.length + " recent entries (kept for 90 days)";
+        for (const e of entries) {
+          box.appendChild(
+            h("div", { class: "item " + (e.status === "error" ? "error" : e.action === "login" ? "info" : "warn") },
+              h("div", { class: "item-head" }, h("strong", null, e.name || e.by), h("small", null, when(e.at))),
+              h("p", null, h("code", null, e.action), " ", e.summary || "", e.status && e.status !== "done" ? " [" + e.status + "]" : "")
+            )
+          );
+        }
+        if (!entries.length) box.textContent = "Nothing yet.";
+      } catch (e) {
+        $("audit-meta").textContent = "Error: " + e.message;
+      }
+    }
+
+    // ---------- Admins ----------
+
+    function renderAdmins(admins, isOwner) {
+      const list = clear($("admin-list"));
+      for (const a of admins) {
+        const li = h("li", null, a.id + (a.role === "owner" ? " (owner)" : " (admin)"));
+        if (isOwner && a.role !== "owner") {
+          li.appendChild(
+            h("button", {
+              type: "button",
+              class: "btn btn-sm btn-secondary",
+              style: "margin-left:0.5rem",
+              onclick: async () => {
+                $("admin-msg").textContent = "Removing…";
+                try {
+                  const r = await api("/api/admins", { method: "DELETE", body: JSON.stringify({ id: a.id }) });
+                  renderAdmins(r.admins, true);
+                  $("admin-msg").textContent = "Removed.";
+                } catch (e) {
+                  $("admin-msg").textContent = e.message;
+                }
+              },
+            }, "Remove")
+          );
+        }
+        list.appendChild(li);
+      }
+      $("add-form").hidden = !isOwner;
+    }
 
     $("add-form").onsubmit = async (ev) => {
       ev.preventDefault();
@@ -173,22 +766,31 @@
       }
     };
 
+    // ---------- Start ----------
+
     async function boot() {
       if (!getToken()) return;
       try {
-        const me = await api("/api/me");
-        $("status").textContent =
-          "Logged in as " + (me.user.global_name || me.user.username) + (me.isOwner ? " (owner)" : "");
-        $("logout").hidden = false;
-        $("panel").hidden = false;
-        $("denied").hidden = true;
+        me = await api("/api/me");
+      } catch (e) {
+        if (/Not logged in|Session expired|Not an admin|Invalid/i.test(e.message)) setToken("");
+        $("status").textContent = getToken() ? "Couldn't reach the API (" + e.message + "). Try reloading." : "Session invalid. Log in again. (" + e.message + ")";
+        return;
+      }
+      $("status").textContent = "Logged in as " + (me.user.global_name || me.user.username) + (me.isOwner ? " (owner)" : "");
+      $("logout").hidden = false;
+      $("panel").hidden = false;
+      $("denied").hidden = true;
+      $("bc-card").hidden = !me.isOwner;
+      buildLevelChips();
+      showTab("overview");
+      try {
         const { admins } = await api("/api/admins");
         renderAdmins(admins, me.isOwner);
-        await loadLogs();
       } catch (e) {
-        setToken("");
-        $("status").textContent = "Session invalid. Log in again. (" + e.message + ")";
+        $("admin-msg").textContent = e.message;
       }
+      setInterval(() => { if (!document.hidden && current === "overview") loadState(); }, 30000);
     }
 
     boot();

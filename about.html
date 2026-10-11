@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>About — The Overlord</title>
+  <meta name="description" content="About The Overlord Discord bot, credits, and contact." />
+  <meta name="theme-color" content="#e0b84a" />
+  <link rel="stylesheet" href="styles.css" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="The Overlord" />
+  <meta property="og:title" content="About — The Overlord" />
+  <meta property="og:description" content="About The Overlord Discord bot, credits, and contact." />
+  <meta property="og:image" content="https://thefallenstargg.github.io/Overlord-Website/og-image.png" />
+</head>
+<body>
+  <script src="data.js"></script>
+
+  <main class="wrap">
+    <section class="card hero compact">
+      <p class="eyebrow">Credits</p>
+      <h1>About</h1>
+      <p class="lead">
+        The Overlord is a Discord bot with a light per-server economy, optional games,
+        and a shared “realm” layer (weather, events, board, and more).
+      </p>
+      <div class="cta-row">
+        <a class="btn" id="invite-btn" href="#">Invite</a>
+        <a class="btn btn-secondary" href="https://discord.gg/vZrsPCMHys" target="_blank" rel="noopener">Support server</a>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="section-title">Who runs this</h2>
+      <ul class="feature-list">
+        <li><strong>Creator / operator:</strong> TheFallenStarGG</li>
+        <li><strong>Email:</strong> <a href="mailto:DarkstarGaming2326@proton.me">DarkstarGaming2326@proton.me</a></li>
+        <li><strong>Bot source:</strong> <a href="https://github.com/TheFallenStarGG/OverLord-Bot" target="_blank" rel="noopener">GitHub — OverLord-Bot</a></li>
+        <li><strong>This website:</strong> static pages + public data the bot publishes</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2 class="section-title">What it is (and isn’t)</h2>
+      <ul class="feature-list">
+        <li>Virtual coins and items have <strong>no real-world value</strong>.</li>
+        <li>Progress is <strong>per server</strong>, not global account progression.</li>
+        <li>Not affiliated with Discord Inc.</li>
+        <li>Provided as-is; see <a href="terms.html">Terms</a> and <a href="privacy.html">Privacy</a>.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2 class="section-title">Thanks</h2>
+      <ul class="feature-list">
+        <li>Everyone who adds the bot and reports bugs</li>
+        <li>People in the support server who test weird edge cases</li>
+        <li>Open libraries and hosts that keep a project like this possible</li>
+      </ul>
+      <p class="meta">
+        If you contribute ideas or fixes, you deserve a mention here — say so in support and we can add your name.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2 class="section-title">Links</h2>
+      <ul class="feature-list">
+        <li><a href="faq.html">FAQ</a></li>
+        <li><a href="setup.html">Setup</a></li>
+        <li><a href="commands.html">Commands</a></li>
+        <li><a href="changelog.html">Changelog</a></li>
+        <li><a href="status.html">Status</a></li>
+      </ul>
+    </section>
+  </main>
+
+  <script>
+    document.getElementById('invite-btn').href = Overlord.INVITE;
+  </script>
+</body>
+</html>

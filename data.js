@@ -22,6 +22,8 @@
     ['status.html', 'Status', '📡', 'Is the bot online?'],
     ['changelog.html', 'Changelog', '📜', 'What changed lately'],
     ['setup.html', 'Setup', '⚙️', 'Admin setup guide'],
+    ['faq.html', 'FAQ', '❓', 'Common questions'],
+    ['about.html', 'About', '👑', 'Credits and contact'],
   ];
   const pages = () => NAV.filter(([href]) => !PENDING.includes(href)).map(([href, label, icon, desc]) => ({ href, label, icon, desc }));
 

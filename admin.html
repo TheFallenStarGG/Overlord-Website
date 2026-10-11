@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Admin — The Overlord</title>
+  <meta name="robots" content="noindex" />
+  <meta name="theme-color" content="#e0b84a" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <script src="data.js"></script>
+
+  <main class="wrap">
+    <section class="card hero compact">
+      <p class="eyebrow">Private</p>
+      <h1>Admin</h1>
+      <p class="lead">Owner and allowlisted admins only. Bot logs + admin list.</p>
+      <div class="cta-row">
+        <button type="button" class="btn" id="login">Log in with Discord</button>
+        <button type="button" class="btn btn-secondary" id="logout" hidden>Log out</button>
+      </div>
+      <p class="meta" id="status">Not logged in.</p>
+    </section>
+
+    <div id="denied" class="card" hidden>
+      <h2 class="section-title">Access denied</h2>
+      <p class="meta">Your Discord account is not on the admin list.</p>
+    </div>
+
+    <div id="panel" hidden>
+      <section class="card">
+        <h2 class="section-title">Admins</h2>
+        <p class="section-sub" id="admin-hint">Only the owner can add or remove people.</p>
+        <ul class="feature-list" id="admin-list"></ul>
+        <form id="add-form" class="cmd-table" hidden>
+          <label>
+            Discord user ID
+            <input name="id" type="text" inputmode="numeric" placeholder="17–20 digit ID" required />
+          </label>
+          <button class="btn" type="submit">Add admin</button>
+        </form>
+        <p class="meta" id="admin-msg"></p>
+      </section>
+
+      <section class="card">
+        <h2 class="section-title">Bot logs</h2>
+        <p class="meta" id="logs-meta">—</p>
+        <button type="button" class="btn btn-secondary" id="refresh-logs">Refresh</button>
+        <div id="logs" class="cmd-table" style="margin-top: 1rem;"></div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    // *** YOUR WORKER URL — no trailing slash ***
+    const API = "https://overlord-api.darkstargaming23266.workers.dev/";
+    const TOKEN_KEY = "overlord_admin_token";
+
+    const $ = (id) => document.getElementById(id);
+
+    function getToken() {
+      return localStorage.getItem(TOKEN_KEY) || "";
+    }
+    function setToken(t) {
+      if (t) localStorage.setItem(TOKEN_KEY, t);
+      else localStorage.removeItem(TOKEN_KEY);
+    }
+
+    if (location.hash.startsWith("#token=")) {
+      setToken(decodeURIComponent(location.hash.slice(7)));
+      history.replaceState(null, "", location.pathname);
+    }
+    const errQ = new URLSearchParams(location.search).get("error");
+    if (errQ === "not_admin") {
+      $("status").textContent = "Logged in, but not on the admin list.";
+      $("denied").hidden = false;
+    } else if (errQ) {
+      $("status").textContent = "Login error: " + errQ;
+    }
+
+    async function api(path, opts = {}) {
+      const headers = Object.assign({ "content-type": "application/json" }, opts.headers || {});
+      if (getToken()) headers.Authorization = "Bearer " + getToken();
+      const res = await fetch(API + path, { ...opts, headers });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || res.statusText);
+      return data;
+    }
+
+    $("login").onclick = () => {
+      location.href = API + "/auth/login";
+    };
+    $("logout").onclick = () => {
+      setToken("");
+      location.href = "admin.html";
+    };
+
+    function renderAdmins(admins, isOwner) {
+      const list = $("admin-list");
+      list.innerHTML = "";
+      for (const a of admins) {
+        const li = document.createElement("li");
+        li.textContent = a.id + (a.role === "owner" ? " (owner)" : " (admin)");
+        if (isOwner && a.role !== "owner") {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "btn btn-secondary";
+          btn.style.marginLeft = "0.5rem";
+          btn.textContent = "Remove";
+          btn.onclick = async () => {
+            $("admin-msg").textContent = "Removing…";
+            try {
+              const r = await api("/api/admins", { method: "DELETE", body: JSON.stringify({ id: a.id }) });
+              renderAdmins(r.admins, true);
+              $("admin-msg").textContent = "Removed.";
+            } catch (e) {
+              $("admin-msg").textContent = e.message;
+            }
+          };
+          li.appendChild(btn);
+        }
+        list.appendChild(li);
+      }
+      $("add-form").hidden = !isOwner;
+    }
+
+    async function loadLogs() {
+      $("logs-meta").textContent = "Loading…";
+      const box = $("logs");
+      box.innerHTML = "";
+      try {
+        const { logs, fetchedAt } = await api("/api/logs");
+        $("logs-meta").textContent = "Fetched " + new Date(fetchedAt).toLocaleString() + " · " + logs.length + " messages";
+        for (const log of logs) {
+          const row = document.createElement("div");
+          const when = new Date(log.at).toLocaleString();
+          const title = log.title || log.author || "Log";
+          const body = log.description || log.content || "";
+          row.innerHTML = "";
+          const left = document.createElement("strong");
+          left.textContent = title;
+          const right = document.createElement("span");
+          right.textContent = when;
+          const desc = document.createElement("div");
+          desc.style.gridColumn = "1 / -1";
+          desc.className = "meta";
+          desc.textContent = (body || log.footer || "").slice(0, 500);
+          row.appendChild(left);
+          row.appendChild(right);
+          row.appendChild(desc);
+          box.appendChild(row);
+        }
+        if (!logs.length) box.textContent = "No messages in the log channel.";
+      } catch (e) {
+        $("logs-meta").textContent = "Error: " + e.message;
+      }
+    }
+
+    $("refresh-logs").onclick = () => loadLogs();
+
+    $("add-form").onsubmit = async (ev) => {
+      ev.preventDefault();
+      const id = new FormData(ev.target).get("id");
+      $("admin-msg").textContent = "Adding…";
+      try {
+        const r = await api("/api/admins", { method: "POST", body: JSON.stringify({ id }) });
+        renderAdmins(r.admins, true);
+        ev.target.reset();
+        $("admin-msg").textContent = "Added.";
+      } catch (e) {
+        $("admin-msg").textContent = e.message;
+      }
+    };
+
+    async function boot() {
+      if (!getToken()) return;
+      try {
+        const me = await api("/api/me");
+        $("status").textContent =
+          "Logged in as " + (me.user.global_name || me.user.username) + (me.isOwner ? " (owner)" : "");
+        $("logout").hidden = false;
+        $("panel").hidden = false;
+        $("denied").hidden = true;
+        const { admins } = await api("/api/admins");
+        renderAdmins(admins, me.isOwner);
+        await loadLogs();
+      } catch (e) {
+        setToken("");
+        $("status").textContent = "Session invalid. Log in again. (" + e.message + ")";
+      }
+    }
+
+    boot();
+  </script>
+</body>
+</html>

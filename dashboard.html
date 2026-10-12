@@ -404,6 +404,217 @@
         games.nodes,
         saveBtn(() => save(guild, games.changed() ? { games: games.value() } : {}))
       ));
+            // ----- Custom titles -----
+      const titleBox = h("div", { class: "scroll" });
+      const drawTitles = () => {
+        clear(titleBox);
+        if (!d.titles.length) {
+          titleBox.appendChild(h("p", { class: "meta" }, "No custom titles yet."));
+          return;
+        }
+        for (const t of d.titles) {
+          const roleName = (d.roles.find((r) => r.id === t.roleId) || {}).name;
+          titleBox.appendChild(
+            h("div", { class: "switch-row" },
+              h("div", null,
+                h("strong", null, (t.emoji || "🏷️") + " " + t.name),
+                h("div", { class: "meta tight" },
+                  fmtNum(t.price) + " coins" + (roleName ? " · @" + roleName : " · no role") + " · `" + t.id + "`"
+                )
+              ),
+              h("div", { class: "btn-row" },
+                h("button", {
+                  type: "button", class: "btn btn-sm btn-secondary", onclick: () => {
+                    formName.value = t.name;
+                    formEmoji.value = t.emoji || "🏷️";
+                    formPrice.value = String(t.price);
+                    formRole.value = t.roleId || "";
+                    formId.value = t.id;
+                  }
+                }, "Edit"),
+                h("button", {
+                  type: "button", class: "btn btn-sm btn-secondary", onclick: () => {
+                    if (!confirm("Remove title “" + t.name + "” from the shop?")) return;
+                    save(guild, { titleRemove: t.id });
+                  }
+                }, "Remove")
+              )
+            )
+          );
+        }
+      };
+      const formId = h("input", { type: "hidden", value: "" });
+      const formName = h("input", { class: "search", placeholder: "Title name", maxlength: "64" });
+      const formEmoji = h("input", { class: "search", placeholder: "Emoji", value: "🏷️", maxlength: "16" });
+      const formPrice = h("input", { class: "search", type: "number", min: "0", placeholder: "Price", inputmode: "numeric" });
+      const formRole = h("select", { class: "select" },
+        h("option", { value: "" }, "No role"),
+        (d.roles || []).map((r) => h("option", { value: r.id }, "@" + r.name))
+      );
+      drawTitles();
+      body.appendChild(h("div", { class: "card" },
+        h("h2", { class: "section-title" }, "Shop titles"),
+        h("p", { class: "section-sub" }, "Custom titles for !!shop / !!rank. Built-in items stay fixed. Linking a role needs Manage Roles for the bot."),
+        titleBox,
+        h("p", { class: "sub" }, "Add or edit"),
+        formId,
+        h("label", { class: "field" }, "Name", formName),
+        h("label", { class: "field" }, "Emoji", formEmoji),
+        h("label", { class: "field" }, "Price", formPrice),
+        h("label", { class: "field" }, "Role", formRole),
+        saveBtn(() => {
+          const name = formName.value.trim();
+          const price = Math.floor(Number(formPrice.value));
+          if (!name || !Number.isFinite(price) || price < 0) return toast("Name and price required");
+          const row = {
+            name,
+            price,
+            emoji: formEmoji.value.trim() || "🏷️",
+            roleId: formRole.value || null,
+          };
+          if (formId.value) row.id = formId.value;
+          save(guild, { titleUpsert: row });
+          formId.value = "";
+          formName.value = "";
+          formPrice.value = "";
+          formEmoji.value = "🏷️";
+          formRole.value = "";
+        })
+      ));
+
+      // ----- Reaction role panels -----
+      const panelBox = h("div", { class: "scroll" });
+      const drawPanels = () => {
+        clear(panelBox);
+        if (!d.panels.length) {
+          panelBox.appendChild(h("p", { class: "meta" }, "No role panels yet."));
+          return;
+        }
+        for (const p of d.panels) {
+          const jump = "https://discord.com/channels/" + guild + "/" + p.channelId + "/" + p.messageId;
+          panelBox.appendChild(
+            h("div", { class: "switch-row" },
+              h("div", null,
+                h("strong", null, p.title || "Panel"),
+                h("div", { class: "meta tight" },
+                  (p.mode || "?") + " · " + p.roleCount + " role(s)" + (p.exclusive ? " · exclusive" : "")
+                )
+              ),
+              h("div", { class: "btn-row" },
+                h("a", { class: "btn btn-sm btn-secondary", href: jump, target: "_blank", rel: "noopener" }, "Open"),
+                h("button", {
+                  type: "button", class: "btn btn-sm btn-secondary", onclick: () => {
+                    if (!confirm("Delete this role panel message?")) return;
+                    save(guild, { rrDelete: p.messageId });
+                  }
+                }, "Delete")
+              )
+            )
+          );
+        }
+      };
+      drawPanels();
+
+      const rrMode = h("select", { class: "select" },
+        h("option", { value: "buttons" }, "Buttons"),
+        h("option", { value: "dropdown" }, "Dropdown"),
+        h("option", { value: "reactions" }, "Reactions")
+      );
+      const rrChannel = h("select", { class: "select" },
+        h("option", { value: "" }, "Pick a channel"),
+        textChannels.map((c) => h("option", { value: c.id }, cname(c)))
+      );
+      const rrTitle = h("input", { class: "search", placeholder: "Panel title", value: "Pick your roles" });
+      const rrDesc = h("input", { class: "search", placeholder: "Description (optional)" });
+      const rrExclusive = h("input", { type: "checkbox" });
+      const rrRolesBox = h("div", { class: "scroll" });
+      const rrPicked = []; // { roleId, emoji, description }
+
+      const redrawRrRoles = () => {
+        clear(rrRolesBox);
+        if (!rrPicked.length) {
+          rrRolesBox.appendChild(h("p", { class: "meta" }, "No roles added yet."));
+          return;
+        }
+        rrPicked.forEach((row, i) => {
+          const rn = (d.roles.find((r) => r.id === row.roleId) || {}).name || row.roleId;
+          rrRolesBox.appendChild(
+            h("div", { class: "switch-row" },
+              h("div", null, h("strong", null, (row.emoji || "🔘") + " @" + rn)),
+              h("button", {
+                type: "button", class: "btn btn-sm btn-secondary", onclick: () => {
+                  rrPicked.splice(i, 1);
+                  redrawRrRoles();
+                }
+              }, "Remove")
+            )
+          );
+        });
+      };
+      redrawRrRoles();
+
+      const addRoleSel = h("select", { class: "select" },
+        h("option", { value: "" }, "Add role…"),
+        (d.roles || []).map((r) => h("option", { value: r.id }, "@" + r.name))
+      );
+      const addEmoji = h("input", { class: "search", placeholder: "Emoji (needed for Reactions)", maxlength: "64" });
+      const addRoleBtn = h("button", {
+        type: "button", class: "btn btn-sm", onclick: () => {
+          const roleId = addRoleSel.value;
+          if (!roleId) return toast("Pick a role");
+          if (rrPicked.some((x) => x.roleId === roleId)) return toast("Already added");
+          if (rrPicked.length >= 25) return toast("Max 25 roles");
+          const rn = (d.roles.find((r) => r.id === roleId) || {}).name || roleId;
+          rrPicked.push({
+            roleId,
+            emoji: addEmoji.value.trim(),
+            description: rn,
+          });
+          addRoleSel.value = "";
+          addEmoji.value = "";
+          redrawRrRoles();
+        }
+      }, "Add role");
+
+      body.appendChild(h("div", { class: "card" },
+        h("h2", { class: "section-title" }, "Role panels"),
+        h("p", { class: "section-sub" }, "Post a buttons / dropdown / reactions panel. Same safety rules as !!reactionroles (no mod roles, hierarchy respected)."),
+        panelBox,
+        h("p", { class: "sub" }, "New panel"),
+        h("label", { class: "field" }, "Mode", rrMode),
+        h("label", { class: "field" }, "Channel", rrChannel),
+        h("label", { class: "field" }, "Title", rrTitle),
+        h("label", { class: "field" }, "Description", rrDesc),
+        h("label", { class: "switch-row" },
+          h("div", null, h("strong", null, "Exclusive"), h("div", { class: "meta tight" }, "Only one of these roles at a time")),
+          rrExclusive
+        ),
+        rrRolesBox,
+        h("label", { class: "field" }, "Role", addRoleSel),
+        h("label", { class: "field" }, "Emoji", addEmoji),
+        h("div", { class: "btn-row" }, addRoleBtn),
+        saveBtn(() => {
+          if (!rrChannel.value) return toast("Pick a channel");
+          if (!rrPicked.length) return toast("Add at least one role");
+          if (rrMode.value === "reactions" && rrPicked.some((r) => !r.emoji)) {
+            return toast("Reactions mode needs an emoji on every role");
+          }
+          save(guild, {
+            rrPublish: {
+              mode: rrMode.value,
+              channelId: rrChannel.value,
+              title: rrTitle.value.trim() || "Pick your roles",
+              description: rrDesc.value.trim(),
+              exclusive: rrExclusive.checked,
+              roles: rrPicked.map((r) => ({
+                roleId: r.roleId,
+                emoji: r.emoji || "🔘",
+                description: r.description,
+              })),
+            },
+          });
+        })
+      ));
     }
 
     // ---------- Admin panel (admins only) ----------

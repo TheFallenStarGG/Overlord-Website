@@ -235,8 +235,8 @@
 
     // ---------- Server settings ----------
 
-    const cname = (c) => (c.type === 4 ? "📁 " + c.name : "#" + c.name + (c.parent ? " · " + c.parent : ""));
-
+    const cname = (c) => (c.type === 4 ? "📁 " + c.name : "#" + c.name);
+    
     function fillSettingsPicker() {
       const sel = clear($("set-guild"));
       const manage = servers.filter((s) => s.canManage);

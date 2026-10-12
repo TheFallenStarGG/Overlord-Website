@@ -30,6 +30,13 @@
     .switch-row > div { min-width: 0; overflow-wrap: anywhere; }
     .pick { display: grid; gap: 0.5rem; margin: 0.6rem 0; }
   </style>
+
+  <script>if (new URLSearchParams(location.search).get("embed") === "1") document.documentElement.classList.add("embed");</script>
+  <style>
+    .embed .site-header, .embed .site-footer, .embed .hero { display: none !important; }
+    .embed, .embed body { min-height: 0 !important; background: transparent !important; }
+    .embed main { padding: 0; }
+  </style>
 </head>
 <body>
   <script src="data.js"></script>
@@ -243,8 +250,10 @@
       const d = Math.floor(sec / 86400), hr = Math.floor((sec % 86400) / 3600), m = Math.floor((sec % 3600) / 60);
       return d ? d + "d " + hr + "h" : hr ? hr + "h " + m + "m" : m + "m";
     }
+    const EMBED = document.documentElement.classList.contains("embed") && window.parent !== window;
     let toastTimer;
     function toast(msg) {
+      if (EMBED) { parent.postMessage({ type: "overlord-toast", msg }, location.origin); return; }
       const t = $("toast");
       t.textContent = msg;
       t.classList.add("show");
@@ -777,6 +786,11 @@
         $("status").textContent = getToken() ? "Couldn't reach the API (" + e.message + "). Try reloading." : "Session invalid. Log in again. (" + e.message + ")";
         return;
       }
+      if (!me.isAdmin) {
+        $("status").textContent = "Logged in, but not on the admin list.";
+        $("denied").hidden = false;
+        return;
+      }
       $("status").textContent = "Logged in as " + (me.user.global_name || me.user.username) + (me.isOwner ? " (owner)" : "");
       $("logout").hidden = false;
       $("panel").hidden = false;
@@ -793,6 +807,12 @@
       setInterval(() => { if (!document.hidden && current === "overview") loadState(); }, 30000);
     }
 
+
+    if (EMBED) {
+      const send = () => parent.postMessage({ type: "overlord-admin-height", height: document.body.offsetHeight }, location.origin);
+      new ResizeObserver(send).observe(document.body);
+      send();
+    }
     boot();
   </script>
 </body>

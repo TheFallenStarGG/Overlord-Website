@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Dashboard — The Overlord</title>
+  <meta name="description" content="Log in with Discord to see your stats in every server and manage the servers you run." />
+  <meta name="theme-color" content="#e0b84a" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .sub { margin: 1.2rem 0 0.4rem; font-size: 0.8rem; letter-spacing: 0.07em; text-transform: uppercase; color: var(--gold); }
+    .field { display: grid; gap: 0.35rem; margin: 0.7rem 0; font-weight: 650; color: var(--muted); }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.8rem; }
+    .switch-row { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; padding: 0.6rem 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+    .switch-row:last-child { border-bottom: 0; }
+    .switch-row > div, .switch-row > span { min-width: 0; overflow-wrap: anywhere; }
+    input[type="checkbox"] { flex: none; width: 1.4rem; height: 1.4rem; accent-color: var(--gold); }
+    .scroll { max-height: 18rem; overflow-y: auto; padding: 0 0.8rem; margin: 0.5rem 0; background: rgba(0, 0, 0, 0.25); border: 1px solid var(--border); border-radius: 12px; }
+    .pick { display: grid; gap: 0.5rem; margin: 0.6rem 0; }
+    .srvhead { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.4rem; }
+    .srvhead strong { overflow-wrap: anywhere; }
+    .bar { height: 0.55rem; margin: 0.6rem 0 0.2rem; overflow: hidden; background: rgba(255, 255, 255, 0.08); border-radius: 999px; }
+    .bar > span { display: block; height: 100%; background: linear-gradient(90deg, var(--violet), var(--gold)); }
+    .admin-frame { display: block; width: 100%; height: 70vh; border: 0; background: transparent; }
+  </style>
+</head>
+<body>
+  <script src="data.js"></script>
+
+  <main class="wrap">
+    <section class="card hero compact">
+      <p class="eyebrow">Your dashboard</p>
+      <h1>Dashboard</h1>
+      <p class="lead">Log in with Discord to see your stats in every server, and manage the servers you run.</p>
+      <div class="cta-row">
+        <button type="button" class="btn btn-lg" id="login">Log in with Discord</button>
+        <button type="button" class="btn btn-secondary" id="logout" hidden>Log out</button>
+      </div>
+      <p class="meta" id="status">Not logged in.</p>
+      <p class="note" id="scope-note">Logging in lets this site read your Discord username and the list of servers you're in, including whether you manage them. It can't read your messages or email, and it never posts for you.</p>
+    </section>
+
+    <div id="panel" hidden>
+      <div class="tabs" id="tabs" role="tablist"></div>
+
+      <section id="tab-stats">
+        <div id="stats-list"></div>
+      </section>
+
+      <section id="tab-settings" hidden>
+        <div class="card">
+          <h2 class="section-title">Server settings</h2>
+          <p class="section-sub">The same options as the <code>!!settings</code> command. You only see servers where you have Manage Server.</p>
+          <label class="field">Server <select class="select" id="set-guild"></select></label>
+          <p class="meta" id="set-msg"></p>
+        </div>
+        <div id="set-body"></div>
+      </section>
+
+      <section id="tab-admin" hidden>
+        <iframe id="admin-frame" class="admin-frame" title="Admin panel" scrolling="no"></iframe>
+      </section>
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // *** YOUR WORKER URL — no trailing slash ***
+    const API = "https://overlord-api.darkstargaming23266.workers.dev";
+    const TOKEN_KEY = "overlord_admin_token"; // same key as the admin page, so one login covers both
+
+    const $ = (id) => document.getElementById(id);
+
+    function h(tag, props, ...kids) {
+      const e = document.createElement(tag);
+      for (const [k, v] of Object.entries(props || {})) {
+        if (v === false || v === null || v === undefined) continue;
+        if (k === "class") e.className = v;
+        else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
+        else e.setAttribute(k, v === true ? "" : v);
+      }
+      for (const kid of kids.flat()) {
+        if (kid === null || kid === undefined || kid === false) continue;
+        e.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+      }
+      return e;
+    }
+    function clear(node) {
+      while (node.firstChild) node.removeChild(node.firstChild);
+      return node;
+    }
+    const pill = (text, kind) => h("span", { class: "pill " + (kind || "") }, text);
+    const fmtNum = (n) => Number(n || 0).toLocaleString("en-US");
+    const stat = (label, value) => h("div", { class: "stat" }, h("b", null, String(value)), h("span", null, label));
+    let toastTimer;
+    function toast(msg) {
+      const t = $("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove("show"), 4000);
+    }
+
+    // ---------- Session + API ----------
+
+    const getToken = () => localStorage.getItem(TOKEN_KEY) || "";
+    function setToken(t) {
+      if (t) localStorage.setItem(TOKEN_KEY, t);
+      else localStorage.removeItem(TOKEN_KEY);
+    }
+    if (location.hash.startsWith("#token=")) {
+      setToken(decodeURIComponent(location.hash.slice(7)));
+      history.replaceState(null, "", location.pathname);
+    }
+    const errQ = new URLSearchParams(location.search).get("error");
+    if (errQ) $("status").textContent = errQ === "access_denied" ? "Login cancelled." : "Login error: " + errQ;
+
+    async function api(path, opts = {}) {
+      const headers = Object.assign({ "content-type": "application/json" }, opts.headers || {});
+      if (getToken()) headers.Authorization = "Bearer " + getToken();
+      const res = await fetch(API + path, { ...opts, headers });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || res.statusText);
+      return data;
+    }
+
+    $("login").onclick = () => { location.href = API + "/auth/login"; };
+    $("logout").onclick = () => { setToken(""); location.href = "dashboard.html"; };
+
+    let me = null;
+    let servers = [];
+    let TABS = [];
+    let current = "stats";
+    let loadedGuild = null;
+
+    // ---------- Tabs ----------
+
+    function buildTabs() {
+      const box = clear($("tabs"));
+      for (const [id, label] of TABS) {
+        box.appendChild(h("button", { type: "button", class: "tab", role: "tab", "aria-selected": String(id === current), onclick: () => showTab(id) }, label));
+      }
+    }
+    function showTab(id) {
+      current = id;
+      buildTabs();
+      for (const [tid] of TABS) $("tab-" + tid).hidden = tid !== id;
+      if (id === "settings") initSettingsTab();
+      if (id === "admin") openAdmin();
+    }
+
+    // ---------- My stats ----------
+
+    // Keep in sync with CAREERS in lib/economy.js
+    const CAREERS = [["Intern", "📎", 0], ["Barista", "☕", 25], ["Technician", "🔧", 75], ["Manager", "📋", 200], ["Director", "💼", 500], ["CEO", "👑", 1000]];
+    function careerOf(works) {
+      let c = CAREERS[0];
+      for (const x of CAREERS) if (works >= x[2]) c = x;
+      return c;
+    }
+
+    function noteCard(title, text, button) {
+      return h("div", { class: "card" }, h("h2", { class: "section-title" }, title), h("p", { class: "meta" }, text), button ? h("div", { class: "btn-row" }, button) : null);
+    }
+
+    function statsCard(s) {
+      const p = s.player;
+      const head = h("div", { class: "srvhead" },
+        Overlord.avatar({ name: s.name, icon: s.icon }, 40),
+        h("div", null, h("strong", null, s.name), s.canManage ? h("div", { class: "perm-row", style: "margin:0.2rem 0 0" }, pill("You manage this server", "ok")) : null)
+      );
+      if (!p) return h("div", { class: "card" }, head, h("p", { class: "meta tight" }, "No account here yet. Use any command in this server to get started."));
+
+      const lvl = Math.floor(Math.sqrt(p.xp / 100));
+      const lo = lvl * lvl * 100;
+      const hi = (lvl + 1) * (lvl + 1) * 100;
+      const pct = Math.min(100, Math.max(0, ((p.xp - lo) / (hi - lo)) * 100));
+      const career = careerOf(p.works);
+      const alive = p.lastDaily && p.lastDaily >= new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+
+      return h("div", { class: "card" }, head,
+        h("div", { class: "stats" },
+          stat("Coins", fmtNum(p.coins)),
+          stat("Level", lvl),
+          stat("Prestige", p.prestige),
+          stat("Career", career[1] + " " + career[0]),
+          stat("Daily streak", alive ? p.streak : 0),
+          stat("Jobs done", fmtNum(p.works)),
+          stat("Duel wins", fmtNum(p.wins)),
+          stat("Boss kills", fmtNum(p.bossKills))
+        ),
+        h("div", { class: "bar" }, h("span", { style: "width:" + pct.toFixed(0) + "%" })),
+        h("p", { class: "meta tight" }, fmtNum(p.xp - lo) + " / " + fmtNum(hi - lo) + " XP to level " + (lvl + 1)),
+        p.inventory.length ? h("p", { class: "meta tight" }, "Inventory: " + p.inventory.map(([id, n]) => id + " ×" + n).join(", ")) : null
+      );
+    }
+
+    function renderStats() {
+      const box = clear($("stats-list"));
+      if (!servers.length) {
+        box.appendChild(noteCard("No servers yet", "You're not in any server the bot is in. If you just joined one, log in again to refresh the list."));
+        return;
+      }
+      for (const s of servers) box.appendChild(statsCard(s));
+    }
+
+    async function loadServers(retried) {
+      clear($("stats-list")).appendChild(noteCard("Loading…", "Getting your servers."));
+      try {
+        const r = await api("/api/user/stats");
+        servers = r.servers || [];
+        renderStats();
+        fillSettingsPicker();
+      } catch (e) {
+        if (!retried && /Log in again/i.test(e.message)) return setTimeout(() => loadServers(true), 2500);
+        clear($("stats-list")).appendChild(noteCard("Couldn't load your servers", e.message, h("button", { type: "button", class: "btn btn-sm", onclick: () => $("login").click() }, "Log in again")));
+      }
+    }
+
+    // ---------- Server settings ----------
+
+    const cname = (c) => (c.type === 4 ? "📁 " + c.name : "#" + c.name + (c.parent ? " · " + c.parent : ""));
+
+    function fillSettingsPicker() {
+      const sel = clear($("set-guild"));
+      const manage = servers.filter((s) => s.canManage);
+      for (const s of manage) sel.appendChild(h("option", { value: s.id }, s.name));
+      $("set-msg").textContent = manage.length ? "" : "You don't have Manage Server in any server the bot is in. Ask a server admin, or invite the bot to a server you manage.";
+      loadedGuild = null;
+      if (current === "settings") initSettingsTab();
+    }
+    function initSettingsTab() {
+      const guild = $("set-guild").value;
+      if (guild && guild !== loadedGuild) loadSettings(guild);
+    }
+    $("set-guild").onchange = () => loadSettings($("set-guild").value);
+
+    async function loadSettings(guild) {
+      clear($("set-body"));
+      if (!guild) return;
+      $("set-msg").textContent = "Loading…";
+      try {
+        const d = await api("/api/user/settings?guild=" + encodeURIComponent(guild));
+        loadedGuild = guild;
+        $("set-msg").textContent = "";
+        renderSettings(guild, d);
+      } catch (e) {
+        $("set-msg").textContent = e.message;
+      }
+    }
+
+    async function save(guild, changes) {
+      if (!Object.keys(changes).length) return toast("Nothing changed");
+      toast("Saving… (can take a few seconds)");
+      try {
+        const r = await api("/api/user/settings", { method: "POST", body: JSON.stringify({ guild, changes }) });
+        toast((r.ok ? "✅ " : "⚠️ ") + (r.result || r.status));
+        if (r.ok) loadSettings(guild);
+      } catch (e) {
+        toast("❌ " + e.message);
+      }
+    }
+
+    function checklist(channels, selected, max) {
+      const existing = new Set(channels.map((c) => c.id));
+      const start = selected.filter((id) => existing.has(id));
+      const sel = new Set(start);
+      const q = h("input", { class: "search", type: "search", placeholder: "Filter channels…" });
+      const box = h("div", { class: "scroll" });
+      const count = h("p", { class: "meta tight" });
+      const upd = () => { count.textContent = sel.size + " selected (up to " + max + ")"; };
+      const draw = () => {
+        clear(box);
+        const f = q.value.trim().toLowerCase();
+        for (const c of channels) {
+          if (f && !c.name.toLowerCase().includes(f)) continue;
+          box.appendChild(h("label", { class: "switch-row" },
+            h("span", null, cname(c)),
+            h("input", { type: "checkbox", checked: sel.has(c.id), onchange: (e) => {
+              if (e.target.checked) {
+                if (sel.size >= max) { e.target.checked = false; toast("You can pick up to " + max); return; }
+                sel.add(c.id);
+              } else sel.delete(c.id);
+              upd();
+            } })
+          ));
+        }
+      };
+      q.oninput = draw;
+      draw();
+      upd();
+      return {
+        nodes: [q, box, count],
+        value: () => [...sel],
+        changed: () => sel.size !== start.length || start.some((id) => !sel.has(id)),
+      };
+    }
+
+    function renderSettings(guild, d) {
+      const body = clear($("set-body"));
+      const s = d.settings;
+      const textChannels = d.channels.filter((c) => c.type !== 4);
+      const saveBtn = (fn) => h("div", { class: "btn-row" }, h("button", { type: "button", class: "btn btn-sm", onclick: fn }, "Save"));
+
+      // General
+      const boxes = {};
+      const toggle = (key, label, hint) => {
+        boxes[key] = h("input", { type: "checkbox", checked: s[key] });
+        return h("label", { class: "switch-row" }, h("div", null, h("strong", null, label), h("div", { class: "meta tight" }, hint)), boxes[key]);
+      };
+      body.appendChild(h("div", { class: "card" },
+        h("h2", { class: "section-title" }, "General"),
+        toggle("gambling", "Gambling", "Slots, blackjack, roulette and the other games that bet coins."),
+        toggle("rob", "Robbing", "Lets members rob each other with !!rob."),
+        toggle("website", "Website leaderboards", "Lists this server on the public leaderboards and Servers page."),
+        saveBtn(() => {
+          const ch = {};
+          for (const k of Object.keys(boxes)) if (boxes[k].checked !== s[k]) ch[k] = boxes[k].checked;
+          save(guild, ch);
+        })
+      ));
+
+      // Channels
+      const picks = {};
+      const pickRow = (key, label, hint) => {
+        const sel = h("select", { class: "select" }, h("option", { value: "" }, "Off"), textChannels.map((c) => h("option", { value: c.id }, cname(c))));
+        sel.value = textChannels.some((c) => c.id === s[key]) ? s[key] : "";
+        picks[key] = sel;
+        return h("label", { class: "field" }, label, sel, h("span", { class: "meta tight", style: "font-weight:400" }, hint));
+      };
+      body.appendChild(h("div", { class: "card" },
+        h("h2", { class: "section-title" }, "Channels"),
+        pickRow("events", "Events channel", "Bot updates, bosses and announcements."),
+        pickRow("levels", "Level-ups channel", "Where level-up messages go."),
+        pickRow("board", "Realm board", "One message that keeps updating with the realm's news."),
+        saveBtn(() => {
+          const ch = {};
+          for (const k of Object.keys(picks)) if (picks[k].value !== (s[k] || "")) ch[k] = picks[k].value || null;
+          save(guild, ch);
+        })
+      ));
+
+      // Commands
+      const off = new Set(s.disabledCommands);
+      const cmdState = {};
+      const cq = h("input", { class: "search", type: "search", placeholder: "Search commands…" });
+      const clist = h("div", { class: "scroll" });
+      const drawCmds = () => {
+        clear(clist);
+        const f = cq.value.trim().toLowerCase().replace(/^!!/, "");
+        for (const c of d.commands) {
+          if (f && !c.name.includes(f)) continue;
+          const on = c.name in cmdState ? cmdState[c.name] : !off.has(c.name);
+          clist.appendChild(h("label", { class: "switch-row" },
+            h("div", null, h("strong", null, "!!" + c.name), " ", c.protected ? pill("always on") : null, h("div", { class: "meta tight" }, c.description || "")),
+            h("input", { type: "checkbox", checked: on, disabled: c.protected, onchange: (e) => { cmdState[c.name] = e.target.checked; } })
+          ));
+        }
+        if (!clist.firstChild) clist.textContent = "No commands match.";
+      };
+      cq.oninput = drawCmds;
+      drawCmds();
+      body.appendChild(h("div", { class: "card" },
+        h("h2", { class: "section-title" }, "Commands"),
+        h("p", { class: "section-sub" }, "Untick a command to turn it off in this server. Help and setup commands always stay on."),
+        cq, clist,
+        saveBtn(() => {
+          const ch = {};
+          for (const [name, on] of Object.entries(cmdState)) if (on !== !off.has(name)) ch[name] = on;
+          save(guild, Object.keys(ch).length ? { commands: ch } : {});
+        })
+      ));
+
+      // Ignored channels
+      const ignored = checklist(d.channels, s.ignored, 50);
+      body.appendChild(h("div", { class: "card" },
+        h("h2", { class: "section-title" }, "Ignored channels"),
+        h("p", { class: "section-sub" }, "The bot stays silent here and gives no XP. A category covers every channel inside it. Admins can still run commands."),
+        ignored.nodes,
+        saveBtn(() => save(guild, ignored.changed() ? { ignored: ignored.value() } : {}))
+      ));
+
+      // Games-only channels
+      const games = checklist(d.channels, s.games, 10);
+      body.appendChild(h("div", { class: "card" },
+        h("h2", { class: "section-title" }, "Games channels"),
+        h("p", { class: "section-sub" }, "Pick channels to limit games to them. Leave it empty and games work everywhere."),
+        games.nodes,
+        saveBtn(() => save(guild, games.changed() ? { games: games.value() } : {}))
+      ));
+    }
+
+    // ---------- Admin panel (admins only) ----------
+
+    function openAdmin() {
+      const f = $("admin-frame");
+      if (!f.getAttribute("src")) f.setAttribute("src", "admin.html?embed=1");
+    }
+    window.addEventListener("message", (ev) => {
+      if (ev.origin !== location.origin) return;
+      const d = ev.data || {};
+      if (d.type === "overlord-admin-height") $("admin-frame").style.height = Math.max(300, Number(d.height) || 0) + "px";
+      if (d.type === "overlord-toast") toast(String(d.msg || ""));
+    });
+
+    // ---------- Start ----------
+
+    async function boot() {
+      if (!getToken()) return;
+      try {
+        me = await api("/api/me");
+      } catch (e) {
+        if (/Not logged in|Session expired|Invalid/i.test(e.message)) setToken("");
+        $("status").textContent = getToken() ? "Couldn't reach the API (" + e.message + "). Try reloading." : "Session expired. Log in again.";
+        return;
+      }
+      const name = me.user.global_name || me.user.username;
+      $("status").textContent = "Logged in as " + name + (me.isOwner ? " (owner)" : me.isAdmin ? " (admin)" : "");
+      $("scope-note").hidden = true;
+      $("login").hidden = true;
+      $("logout").hidden = false;
+      $("panel").hidden = false;
+
+      TABS = [["stats", "📊 My stats"], ["settings", "⚙️ Server settings"]];
+      if (me.isAdmin) TABS.push(["admin", "🛡️ Admin"]);
+      showTab("stats");
+      loadServers(false);
+    }
+
+    boot();
+  </script>
+</body>
+  </html>

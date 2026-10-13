@@ -228,5 +228,49 @@
   }
 
   window.Overlord = { fetchData, fmt, el, rich, timeAgo, duration, dateText, botState, toast, copy, pages, avatar, medal, INVITE, SUPPORT };
+
+  // Cookie / local storage notice (GDPR-style). Choice is stored so the bar only shows once.
+  function showCookieBanner() {
+    const KEY = 'overlord_cookie_consent';
+    try {
+      if (localStorage.getItem(KEY)) return;
+    } catch (_) {
+      /* private mode — still show the bar */
+    }
+
+    const bar = el('div', {
+      class: 'cookie-banner',
+      role: 'dialog',
+      'aria-label': 'Cookie notice',
+    });
+    const accept = el('button', { type: 'button', class: 'cookie-accept', text: 'Got it' });
+    const essential = el('button', { type: 'button', class: 'cookie-essential', text: 'Essential only' });
+
+    function save(value) {
+      try {
+        localStorage.setItem(KEY, value);
+      } catch (_) {}
+      bar.remove();
+    }
+    accept.addEventListener('click', () => save('all'));
+    essential.addEventListener('click', () => save('essential'));
+
+    bar.append(
+      el('div', { class: 'cookie-inner' },
+        el('p', {},
+          document.createTextNode('This site uses cookies and similar storage (including localStorage) so login sessions and your preferences can work. We don’t sell your data. See the '),
+          el('a', { href: 'privacy.html', text: 'Privacy Policy' }),
+          document.createTextNode(' for details.')
+        ),
+        el('div', { class: 'cookie-actions' }, accept, essential)
+      )
+    );
+
+    const mount = () => document.body.append(bar);
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount);
+    else mount();
+  }
+
   mountLayout();
+  showCookieBanner();
 })();

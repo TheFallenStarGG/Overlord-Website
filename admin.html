@@ -29,6 +29,14 @@
     .switch-row:last-child { border-bottom: 0; }
     .switch-row > div { min-width: 0; overflow-wrap: anywhere; }
     .pick { display: grid; gap: 0.5rem; margin: 0.6rem 0; }
+    .pick-list { max-height: 15rem; overflow-y: auto; margin: 0.4rem 0; border: 1px solid var(--border); border-radius: 12px; }
+    .pick-row { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 0.6rem; padding: 0.6rem 0.85rem; text-align: left; font: inherit; color: var(--text); background: transparent; border: 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+    .pick-row:last-child { border-bottom: 0; }
+    .pick-row:hover:not(:disabled) { background: rgba(255, 255, 255, 0.05); }
+    .pick-row[aria-pressed="true"] { background: rgba(224, 184, 74, 0.16); box-shadow: inset 3px 0 0 var(--gold); }
+    .pick-row:disabled { opacity: 0.5; cursor: not-allowed; }
+    .pick-row > span { min-width: 0; overflow-wrap: anywhere; }
+    .pick-row small { display: block; color: var(--faint); }
   </style>
 
   <script>if (new URLSearchParams(location.search).get("embed") === "1") document.documentElement.classList.add("embed");</script>
@@ -173,8 +181,14 @@
           <label class="field">Type
             <select class="select" id="bl-kind"><option value="user">User</option><option value="server">Server</option></select>
           </label>
-          <label class="field">ID <input id="bl-id" type="text" inputmode="numeric" placeholder="17–20 digit ID" /></label>
-          <label class="field">Reason <input id="bl-reason" type="text" maxlength="200" placeholder="Optional" /></label>
+          <label class="field">Search <input id="bl-q" type="search" autocomplete="off" placeholder="Type a name, then click them below…" /></label>
+          <div class="pick-list" id="bl-results"></div>
+          <p class="meta tight" id="bl-selected">Nothing selected.</p>
+          <details>
+            <summary class="meta">Not in the list? Paste an ID instead</summary>
+            <label class="field">ID <input id="bl-id" type="text" inputmode="numeric" placeholder="17–20 digit ID" /></label>
+          </details>
+          <label class="field">Reason <input id="bl-reason" type="text" maxlength="200" placeholder="Optional (servers see this in the ban message)" /></label>
           <div class="btn-row"><button type="button" class="btn btn-sm btn-danger" id="bl-add">Blacklist</button></div>
         </div>
 
@@ -584,8 +598,18 @@
             h("div", { class: "perm-row" },
               s.listed ? pill("On website", "ok") : pill("Hidden from website", "warn"),
               s.blocked ? pill("Blacklisted", "bad") : null,
-              h("button", { type: "button", class: "btn btn-sm btn-secondary", onclick: () => { $("eco-guild").value = s.id; showTab("economy"); } }, "Economy tools")
-            )
+              h("button", { type: "button", class: "btn btn-sm btn-secondary", onclick: () => { $("eco-guild").value = s.id; showTab("economy"); } }, "Economy tools"),
+              s.blocked ? null : h("button", {
+                type: "button",
+                class: "btn btn-sm btn-danger",
+                onclick: async () => {
+                  if (!confirm("Blacklist " + s.name + "? The bot will post the ban notice and leave.")) return;
+                  const reason = prompt("Reason (the server will see this):", "");
+                  if (reason === null) return;
+                  await act("blacklist", { op: "add", kind: "server", id: s.id, reason: reason.trim() });
+                },
+              }, "Blacklist")
+             )
           )
         );
       }
@@ -676,6 +700,7 @@
       if (m.on && !$("mt-msg").value) $("mt-msg").value = m.message || "";
       renderCmds();
       renderBlacklist();
+      renderBlPicker();
     }
 
     function renderCmds() {
@@ -705,10 +730,14 @@
       const box = clear($("bl-list"));
       const add = (kind, rows) => {
         for (const r of rows) {
+          const shown = r.name || r.id;
           box.appendChild(
             h("div", { class: "switch-row" },
-              h("div", null, h("strong", null, (kind === "user" ? "User " : "Server ") + r.id), h("div", { class: "meta tight" }, (r.reason || "No reason") + (r.at ? " · " + when(r.at) : ""))),
-              h("button", { type: "button", class: "btn btn-sm btn-secondary", onclick: () => { if (confirm("Remove " + r.id + " from the blacklist?")) act("blacklist", { op: "remove", kind, id: r.id }); } }, "Remove")
+              h("div", null,
+                h("strong", null, (kind === "user" ? "User " : "Server ") + shown),
+                h("div", { class: "meta tight" }, (r.name ? r.id + " · " : "") + (r.reason || "No reason") + (r.at ? " · " + when(r.at) : ""))
+              ),
+              h("button", { type: "button", class: "btn btn-sm btn-secondary", onclick: () => { if (confirm("Remove " + shown + " from the blacklist?")) act("blacklist", { op: "remove", kind, id: r.id }); } }, "Remove")
             )
           );
         }
@@ -718,22 +747,85 @@
       if (!box.firstChild) box.textContent = "Nobody is blacklisted.";
     }
 
+    // Search-and-pick for the blacklist
+    let blPick = null; // { id, name }
+
+    function blCandidates() {
+      const st = S.state || {};
+      if ($("bl-kind").value === "server") {
+        return (st.servers || []).map((s) => ({
+          id: s.id,
+          name: s.name,
+          sub: fmtNum(s.members) + " members",
+          blocked: Boolean(s.blocked),
+          find: (s.name + " " + s.id).toLowerCase(),
+        }));
+      }
+      return (st.users || []).map((u) => ({
+        id: u[0],
+        name: u[1],
+        sub: [u[2] && u[2] !== u[1] ? "@" + u[2] : "", u[3], u[4] ? "last used a command " + span(Date.now() - u[4]) + " ago" : ""].filter(Boolean).join(" · "),
+        blocked: Boolean(u[5]),
+        find: (u[1] + " " + u[2] + " " + u[3] + " " + u[0]).toLowerCase(),
+      }));
+    }
+
+    function renderBlPicker() {
+      const box = clear($("bl-results"));
+      const q = $("bl-q").value.trim().toLowerCase();
+      const all = blCandidates();
+      const hits = (q ? all.filter((c) => c.find.includes(q)) : all).slice(0, 40);
+      for (const c of hits) {
+        box.appendChild(
+          h("button", {
+              type: "button",
+              class: "pick-row",
+              disabled: c.blocked,
+              "aria-pressed": String(Boolean(blPick) && blPick.id === c.id),
+              onclick: () => { blPick = { id: c.id, name: c.name }; $("bl-id").value = ""; renderBlPicker(); },
+            },
+            h("span", null, h("strong", null, c.name), h("small", null, c.sub)),
+            c.blocked ? pill("Blacklisted", "bad") : null
+          )
+        );
+      }
+      if (!hits.length) {
+        box.textContent = all.length
+          ? "Nothing matches that search."
+          : $("bl-kind").value === "server"
+            ? "No servers yet."
+            : "No users yet. People show up here once they run a command or play the games. You can still paste an ID below.";
+      }
+      $("bl-selected").textContent = blPick ? "Selected: " + blPick.name : "Nothing selected.";
+    }
+
+    $("bl-q").oninput = renderBlPicker;
+    $("bl-kind").onchange = () => { blPick = null; $("bl-q").value = ""; renderBlPicker(); };
+    $("bl-id").oninput = () => { if ($("bl-id").value.trim()) { blPick = null; renderBlPicker(); } };
+
+    $("bl-add").onclick = async () => {
+      const kind = $("bl-kind").value;
+      const id = blPick ? blPick.id : $("bl-id").value.trim();
+      const label = blPick ? blPick.name : id;
+      if (!/^\d{17,20}$/.test(id)) return toast("Pick someone from the list first");
+      const warn = kind === "server"
+        ? "The bot will post the ban notice in " + label + " and leave it. Continue?"
+        : "Blacklist " + label + "? They'll get a DM and be blocked from every command.";
+      if (!confirm(warn)) return;
+      const r = await act("blacklist", { op: "add", kind, id, reason: $("bl-reason").value.trim() });
+      if (r && r.ok) {
+        blPick = null;
+        $("bl-id").value = "";
+        $("bl-q").value = "";
+        $("bl-reason").value = "";
+        renderBlPicker();
+      }
+    };
+
     $("mt-on").onclick = () => {
       if (confirm("Turn maintenance mode ON? Everyone except you will be blocked from commands.")) act("maintenance", { on: true, message: $("mt-msg").value.trim() });
     };
     $("mt-off").onclick = () => act("maintenance", { on: false });
-
-    $("bl-add").onclick = async () => {
-      const kind = $("bl-kind").value;
-      const id = $("bl-id").value.trim();
-      if (!/^\d{17,20}$/.test(id)) return toast("Enter a 17–20 digit ID");
-      if (kind === "server" && !confirm("The bot will leave that server and ignore it from now on. Continue?")) return;
-      const r = await act("blacklist", { op: "add", kind, id, reason: $("bl-reason").value.trim() });
-      if (r && r.ok) {
-        $("bl-id").value = "";
-        $("bl-reason").value = "";
-      }
-    };
 
     $("bc-send").onclick = async () => {
       const title = $("bc-title").value.trim();

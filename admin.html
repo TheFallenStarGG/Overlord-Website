@@ -94,6 +94,14 @@
           <p class="meta" id="logs-meta">—</p>
           <div id="logs"></div>
           <div class="btn-row"><button type="button" class="btn btn-sm btn-secondary" id="more-logs" hidden>Load older</button></div>
+                  <hr style="border:0;border-top:1px solid var(--border);margin:1.2rem 0" />
+          <h2 class="section-title">Host console</h2>
+          <p class="section-sub">Raw process output from bot-hosting (errors/stacks). Structured bot logs are omitted here so they aren’t duplicated — those stay in the list above.</p>
+          <div class="btn-row">
+            <button type="button" class="btn btn-sm" id="refresh-host-logs">Refresh host</button>
+          </div>
+          <p class="meta" id="host-logs-meta">—</p>
+          <pre id="host-logs" style="max-height:22rem;overflow:auto;padding:0.75rem;background:rgba(0,0,0,0.35);border:1px solid var(--border);border-radius:12px;font-size:0.78rem;line-height:1.45;white-space:pre-wrap;word-break:break-word"></pre>
         </div>
       </section>
 
@@ -332,7 +340,10 @@
       buildTabs();
       for (const [tid] of TABS) $("tab-" + tid).hidden = tid !== id;
       if (["overview", "servers", "economy", "controls"].includes(id)) loadState();
-      if (id === "logs" && !logState.items.length) loadLogs(false);
+      if (id === "logs") {
+        if (!logState.items.length) loadLogs(false);
+        loadHostLogs();
+            }
       if (id === "inbox") loadInbox();
       if (id === "audit") loadAudit();
     }
@@ -489,6 +500,33 @@
         $("auto-logs").textContent = "Auto-refresh: on (15s)";
       }
     };
+
+    async function loadHostLogs() {
+      const meta = $("host-logs-meta");
+      const pre = $("host-logs");
+      if (!meta || !pre) return;
+      meta.textContent = "Loading host console…";
+      try {
+        const data = await api("/api/host-logs?size=250");
+        if (data.error && !data.lines?.length) {
+          meta.textContent = data.error;
+          pre.textContent = "";
+          return;
+        }
+        const state = data.state ? " · state: " + data.state : "";
+        meta.textContent =
+          (data.lines?.length || 0) + " extra lines (filtered " +
+          ((data.rawCount || 0) - (data.lines?.length || 0)) +
+          " structured/boss)" + state +
+          (data.fetchedAt ? " · " + new Date(data.fetchedAt).toLocaleString() : "");
+        pre.textContent = (data.lines && data.lines.length) ? data.lines.join("\n") : "(no extra host lines right now)";
+      } catch (e) {
+        meta.textContent = "Error: " + e.message;
+        pre.textContent = "";
+      }
+    }
+
+    $("refresh-host-logs").onclick = () => loadHostLogs();
 
     // ---------- Inbox ----------
 

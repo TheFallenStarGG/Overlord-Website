@@ -173,6 +173,16 @@
           <div id="cmd-list"></div>
         </div>
 
+        <div class="card" id="bc-card">
+          <h2 class="section-title">Broadcast</h2>
+          <p class="section-sub">Posts an announcement in every server's events channel (no pings).</p>
+          <label class="field">Title <input id="bc-title" type="text" maxlength="100" /></label>
+          <label class="field">Message <textarea id="bc-text" maxlength="2000"></textarea></label>
+          <div class="btn-row"><button type="button" class="btn btn-sm" id="bc-send">Send to all servers</button></div>
+        </div>
+      </section>
+
+      <section id="tab-blacklist" hidden>
         <div class="card">
           <h2 class="section-title">Blacklist</h2>
           <p class="section-sub">Blocked users can't use the bot. Blocking a server makes the bot leave it.</p>
@@ -191,16 +201,34 @@
           <label class="field">Reason <input id="bl-reason" type="text" maxlength="200" placeholder="Optional (servers see this in the ban message)" /></label>
           <div class="btn-row"><button type="button" class="btn btn-sm btn-danger" id="bl-add">Blacklist</button></div>
         </div>
-
-        <div class="card" id="bc-card">
-          <h2 class="section-title">Broadcast</h2>
-          <p class="section-sub">Posts an announcement in every server's events channel (no pings).</p>
-          <label class="field">Title <input id="bc-title" type="text" maxlength="100" /></label>
-          <label class="field">Message <textarea id="bc-text" maxlength="2000"></textarea></label>
-          <div class="btn-row"><button type="button" class="btn btn-sm" id="bc-send">Send to all servers</button></div>
-        </div>
       </section>
 
+      <section id="tab-privacy" hidden>
+        <div class="card">
+          <h2 class="section-title">Delete user data</h2>
+          <p class="section-sub">For privacy requests. Wipes that player in one server and opts them out. Search by name like the blacklist.</p>
+          <label class="field">Server
+            <select class="select" id="priv-guild"></select>
+          </label>
+          <label class="field">Search user <input id="priv-q" type="search" placeholder="Name…" /></label>
+          <div class="pick-list" id="priv-results"></div>
+          <p class="meta tight" id="priv-selected">Nothing selected.</p>
+          <div class="btn-row">
+            <button type="button" class="btn btn-sm btn-danger" id="priv-wipe-user">Delete this user's data</button>
+          </div>
+        </div>
+        <div class="card">
+          <h2 class="section-title">Delete entire server data</h2>
+          <p class="section-sub">Same idea as !!deletedata. Erases all bot data for that server. Cannot be undone.</p>
+          <label class="field">Server
+            <select class="select" id="priv-guild-full"></select>
+          </label>
+          <div class="btn-row">
+            <button type="button" class="btn btn-sm btn-danger" id="priv-wipe-guild">Delete all data for this server</button>
+          </div>
+        </div>
+      </section>
+      
       <!-- Audit -->
       <section id="tab-audit" hidden>
         <div class="card">
@@ -336,6 +364,8 @@
       ["servers", "🏰 Servers"],
       ["economy", "💰 Economy"],
       ["controls", "🛠️ Controls"],
+      ["blacklist", "🚫 Blacklist"],
+      ["privacy", "🗑️ Privacy"],
       ["audit", "🧾 Audit"],
       ["admins", "👥 Admins"],
     ];
@@ -353,13 +383,21 @@
       current = id;
       buildTabs();
       for (const [tid] of TABS) $("tab-" + tid).hidden = tid !== id;
-      if (["overview", "servers", "economy", "controls"].includes(id)) loadState();
+    if (["overview", "servers", "economy", "controls", "blacklist", "privacy"].includes(id)) loadState();
       if (id === "logs") {
         if (!logState.items.length) loadLogs(false);
         loadHostLogs();
-            }
+      }
       if (id === "inbox") loadInbox();
       if (id === "audit") loadAudit();
+      if (id === "blacklist") {
+        renderBlacklist();
+        renderBlPicker();
+      }
+      if (id === "privacy") {
+        fillPrivGuilds();
+        renderPrivPicker();
+      }
     }
 
     // ---------- Bot data (overview, servers, controls) ----------
@@ -821,6 +859,69 @@
         renderBlPicker();
       }
     };
+
+    let privPick = null;
+
+    function fillPrivGuilds() {
+      for (const selId of ["priv-guild", "priv-guild-full"]) {
+        const sel = $(selId);
+        if (!sel) continue;
+        const cur = sel.value;
+        sel.innerHTML = "";
+        for (const s of (S.state && S.state.servers) || []) {
+          sel.appendChild(h("option", { value: s.id }, s.name || s.id));
+        }
+        if (cur) sel.value = cur;
+      }
+    }
+
+    function renderPrivPicker() {
+      const box = clear($("priv-results"));
+      if (!box) return;
+      const q = ($("priv-q") && $("priv-q").value.trim().toLowerCase()) || "";
+      const all = typeof blCandidates === "function" ? blCandidates() : [];
+      const hits = (q ? all.filter((c) => c.find.includes(q)) : all).slice(0, 40);
+      for (const c of hits) {
+        box.appendChild(
+          h(
+            "button",
+            {
+              type: "button",
+              class: "pick-row",
+              onclick: () => {
+                privPick = { id: c.id, name: c.name };
+                $("priv-selected").textContent = "Selected: " + c.name;
+              },
+            },
+            h("span", null, h("strong", null, c.name), h("small", null, c.sub))
+          )
+        );
+      }
+      if (!hits.length) box.textContent = "No matches.";
+    }
+
+    if ($("priv-q")) $("priv-q").oninput = renderPrivPicker;
+
+    if ($("priv-wipe-user")) {
+      $("priv-wipe-user").onclick = async () => {
+        const guildId = $("priv-guild") && $("priv-guild").value;
+        if (!privPick || !guildId) return toast("Pick a server and a user");
+        if (!confirm("Permanently delete all bot data for " + privPick.name + " in this server and opt them out?")) return;
+        const r = await act("wipeUser", { guildId, userId: privPick.id });
+        if (r && r.ok) toast("User data deleted");
+      };
+    }
+
+    if ($("priv-wipe-guild")) {
+      $("priv-wipe-guild").onclick = async () => {
+        const guildId = $("priv-guild-full") && $("priv-guild-full").value;
+        if (!guildId) return toast("Pick a server");
+        if (!confirm("Delete ALL bot data for this entire server? Cannot be undone.")) return;
+        if (!confirm("Really sure?")) return;
+        const r = await act("wipeGuild", { guildId });
+        if (r && r.ok) toast("Server data deleted");
+      };
+    }
 
     $("mt-on").onclick = () => {
       if (confirm("Turn maintenance mode ON? Everyone except you will be blocked from commands.")) act("maintenance", { on: true, message: $("mt-msg").value.trim() });

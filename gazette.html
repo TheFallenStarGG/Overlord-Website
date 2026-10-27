@@ -9,6 +9,7 @@
   <meta name="theme-color" content="#e0b84a" />
   <link rel="stylesheet" href="styles.css" />
   <style>
+    .paper-img { display: block; width: 100%; max-width: 900px; height: auto; margin: 0 auto; border-radius: 4px; box-shadow: 0 8px 30px rgba(0,0,0,.45); }
     .paper {
       background: #f4efe4;
       color: #1c1914;
@@ -200,11 +201,22 @@
           return;
         }
         for (const ed of list) {
-          sel.appendChild(el('option', { value: ed.guildId, text: ed.name + (ed.date ? ' · ' + ed.date : '') }));
+          sel.appendChild(el('option', { value: ed.slug, text: ed.name + (ed.date ? ' · ' + ed.date : '') }));
         }
+        const BASE = Overlord.DATA_BASE || 'https://raw.githubusercontent.com/TheFallenStarGG/Overlord-Website/data/';
         const show = () => {
-          const ed = list.find((e) => e.guildId === sel.value) || list[0];
-          $('content').replaceChildren(paper(ed));
+          const ed = list.find((e) => e.slug === sel.value) || list[0];
+          if (!ed.image) {
+            $('content').replaceChildren(paper(ed));
+            return;
+          }
+          const url = BASE + ed.image;
+          const img = document.createElement('img');
+          img.className = 'paper-img';
+          img.alt = ed.name + ' Gazette, ' + (ed.date || '');
+          img.src = url + '?v=' + encodeURIComponent(ed.imageV || ed.date || '');
+          img.addEventListener('error', () => $('content').replaceChildren(paper(ed)));
+          $('content').replaceChildren(el('a', { href: url, target: '_blank', rel: 'noopener' }, img));
         };
         sel.onchange = show;
         show();

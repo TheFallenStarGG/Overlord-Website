@@ -55,17 +55,31 @@
         // Map
         const mapCard = el('section', { class: 'card' });
         mapCard.append(el('h2', { text: 'Map' }));
-        const img = el('img', {
-          class: 'camp-map',
-          alt: 'Campaign map',
-          src: DATA_BASE + (c.mapImage || 'campaign-map.png') + '?t=' + Date.now(),
+        const mapSrc =
+          DATA_BASE +
+          (c.mapImage || 'campaign-map.png') +
+          '?v=' +
+          encodeURIComponent(c.generatedAt || Date.now());
+        const img = document.createElement('img');
+        img.className = 'camp-map';
+        img.alt = 'Campaign map';
+        img.src = mapSrc;
+        img.loading = 'lazy';
+        img.referrerPolicy = 'no-referrer';
+        const fail = el('p', {
+          class: 'camp-note',
+          text: 'Could not display the map image. Open it directly: ',
         });
-        img.onerror = () => {
-          img.replaceWith(el('p', {
-            class: 'camp-note',
-            text: 'Map PNG not on the data branch yet. After the bot logs “Campaign map export · updated”, refresh this page.',
-          }));
-        };
+        const link = el('a', {
+          href: mapSrc.split('?')[0],
+          target: '_blank',
+          rel: 'noopener',
+          text: 'campaign-map.png',
+        });
+        fail.append(link);
+        img.addEventListener('error', () => {
+          img.replaceWith(fail);
+        });
         mapCard.append(img);
         out.push(mapCard);
 

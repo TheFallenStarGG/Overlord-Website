@@ -229,8 +229,8 @@
     return box;
   }
 
-  window.Overlord = { fetchData, fmt, el, rich, timeAgo, duration, dateText, botState, toast, copy, pages, avatar, medal, INVITE, SUPPORT };
-
+  window.Overlord = { fetchData, fmt, el, rich, timeAgo, duration, dateText, botState, toast, copy, pages, avatar, medal, INVITE, SUPPORT, DATA_BASE };
+  
   // Cookie / local storage notice (GDPR-style). Choice is stored so the bar only shows once.
   function showCookieBanner() {
     const KEY = 'overlord_cookie_consent';

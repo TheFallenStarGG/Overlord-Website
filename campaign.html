@@ -53,31 +53,17 @@
         const out = [];
 
         // Map
+        const BASE = Overlord.DATA_BASE || 'https://raw.githubusercontent.com/TheFallenStarGG/Overlord-Website/data/';
         const mapCard = el('section', { class: 'card' });
         mapCard.append(el('h2', { text: 'Map' }));
-        const mapSrc =
-          DATA_BASE +
-          (c.mapImage || 'campaign-map.png') +
-          '?v=' +
-          encodeURIComponent(c.generatedAt || Date.now());
+        const mapUrl = BASE + (c.mapImage || 'campaign-map.png');
         const img = document.createElement('img');
         img.className = 'camp-map';
         img.alt = 'Campaign map';
-        img.src = mapSrc;
-        img.loading = 'lazy';
-        img.referrerPolicy = 'no-referrer';
-        const fail = el('p', {
-          class: 'camp-note',
-          text: 'Could not display the map image. Open it directly: ',
-        });
-        const link = el('a', {
-          href: mapSrc.split('?')[0],
-          target: '_blank',
-          rel: 'noopener',
-          text: 'campaign-map.png',
-        });
-        fail.append(link);
+        img.src = mapUrl + '?v=' + encodeURIComponent(c.generatedAt || Date.now());
         img.addEventListener('error', () => {
+          const fail = el('p', { class: 'camp-note', text: 'Could not load the map image. Open it directly: ' });
+          fail.append(el('a', { href: mapUrl, target: '_blank', rel: 'noopener', text: 'campaign-map.png' }));
           img.replaceWith(fail);
         });
         mapCard.append(img);

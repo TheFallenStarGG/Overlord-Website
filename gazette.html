@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>The Gazette — Daily Paper by Server</title>
+  <meta name="description" content="Read the latest Overlord Gazette edition for each server." />
+  <link rel="canonical" href="https://thefallenstargg.github.io/Overlord-Website/gazette.html" />
+  <meta name="theme-color" content="#e0b84a" />
+  <meta property="og:title" content="The Gazette — Daily Paper by Server" />
+  <meta property="og:url" content="https://thefallenstargg.github.io/Overlord-Website/gazette.html" />
+  <meta property="og:image" content="https://thefallenstargg.github.io/Overlord-Website/og-image.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <script src="data.js"></script>
+  <main class="wrap">
+    <section class="card hero compact">
+      <p class="eyebrow">Daily paper</p>
+      <h1>Gazette</h1>
+      <p class="lead">Each server prints its own edition (economy and events in that realm). Pick a server to read today’s paper.</p>
+      <div class="stats">
+        <div class="stat"><b id="g-count">—</b><span>Editions</span></div>
+        <div class="stat"><b id="g-when">—</b><span>Data age</span></div>
+      </div>
+    </section>
+    <div class="card picker">
+      <label for="server-pick">Server</label>
+      <select class="select" id="server-pick" aria-label="Server"></select>
+    </div>
+    <div id="content">
+      <div class="skeleton block"></div>
+    </div>
+  </main>
+  <script>
+    (async () => {
+      const { fetchData, el, rich, timeAgo } = Overlord;
+      const $ = (id) => document.getElementById(id);
+
+      function renderEdition(ed) {
+        if (!ed) {
+          return el('div', { class: 'card' },
+            el('p', { class: 'note', text: 'No Gazette stored for this server yet. It prints around 00:05 UTC after !!events-channel is set.' }));
+        }
+        const parts = [
+          el('section', { class: 'card' },
+            el('h2', { text: ed.name }),
+            el('p', { class: 'meta', text: 'Edition · ' + (ed.date || '—') }),
+            el('p', null, rich(ed.editorial || 'No editorial.'))
+          )
+        ];
+        for (const s of ed.sections || []) {
+          parts.push(el('section', { class: 'card' },
+            el('h3', { text: s.name }),
+            el('p', null, rich(s.value || '—'))
+          ));
+        }
+        return el('div', null, ...parts);
+      }
+
+      try {
+        const g = await fetchData('gazettes.json');
+        $('g-count').textContent = String(g.count || 0);
+        $('g-when').textContent = g.generatedAt ? timeAgo(g.generatedAt) : '—';
+
+        const sel = $('server-pick');
+        const list = g.editions || [];
+        if (!list.length) {
+          sel.replaceChildren(el('option', { text: 'No editions yet' }));
+          $('content').replaceChildren(renderEdition(null));
+          return;
+        }
+        for (const ed of list) {
+          sel.appendChild(el('option', { value: ed.guildId, text: ed.name + (ed.date ? ' · ' + ed.date : '') }));
+        }
+        const show = () => {
+          const ed = list.find((e) => e.guildId === sel.value) || list[0];
+          $('content').replaceChildren(renderEdition(ed));
+        };
+        sel.onchange = show;
+        show();
+      } catch (err) {
+        $('content').replaceChildren(el('div', { class: 'card' },
+          el('p', { class: 'meta', text: 'Gazette data could not be loaded. Wait for the next website export (gazettes.json).' })));
+      }
+    })();
+  </script>
+</body>
+</html>

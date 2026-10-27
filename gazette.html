@@ -4,13 +4,99 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>The Gazette — Daily Paper by Server</title>
-  <meta name="description" content="Read the latest Overlord Gazette edition for each server." />
+  <meta name="description" content="Read the latest Overlord Gazette for each server." />
   <link rel="canonical" href="https://thefallenstargg.github.io/Overlord-Website/gazette.html" />
   <meta name="theme-color" content="#e0b84a" />
-  <meta property="og:title" content="The Gazette — Daily Paper by Server" />
-  <meta property="og:url" content="https://thefallenstargg.github.io/Overlord-Website/gazette.html" />
-  <meta property="og:image" content="https://thefallenstargg.github.io/Overlord-Website/og-image.png" />
   <link rel="stylesheet" href="styles.css" />
+  <style>
+    .paper {
+      background: #f4efe4;
+      color: #1c1914;
+      border: 2px solid #2a241c;
+      border-radius: 4px;
+      padding: 1.25rem 1.35rem 1.5rem;
+      max-width: 720px;
+      margin: 0 auto;
+      font-family: Georgia, "Times New Roman", serif;
+    }
+    .paper-top {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #5c5346;
+      border-bottom: 1px solid #2a241c;
+      padding-bottom: 0.4rem;
+      margin-bottom: 0.75rem;
+    }
+    .paper-mast {
+      text-align: center;
+      margin: 0.4rem 0 0.9rem;
+    }
+    .paper-mast h2 {
+      font-size: clamp(2.2rem, 8vw, 3.2rem);
+      margin: 0;
+      letter-spacing: 0.04em;
+      line-height: 1;
+    }
+    .paper-mast p {
+      margin: 0.35rem 0 0;
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #5c5346;
+    }
+    .paper-rule {
+      border: 0;
+      border-top: 1.5px solid #2a241c;
+      border-bottom: 0.5px solid #2a241c;
+      height: 4px;
+      margin: 0.85rem 0;
+    }
+    .paper-lead h3 {
+      font-size: 1.35rem;
+      margin: 0 0 0.25rem;
+      line-height: 1.2;
+      text-transform: uppercase;
+    }
+    .paper-date {
+      font-size: 0.75rem;
+      color: #5c5346;
+      margin-bottom: 0.5rem;
+    }
+    .paper-lead p, .paper-col p, .paper-brief p {
+      margin: 0;
+      font-size: 0.95rem;
+      line-height: 1.45;
+    }
+    .paper-grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+    .paper-grid3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1rem;
+    }
+    .paper-col h4, .paper-brief h4 {
+      margin: 0 0 0.35rem;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+    }
+    .paper-foot {
+      margin-top: 1rem;
+      padding-top: 0.5rem;
+      border-top: 1px solid #2a241c;
+      text-align: center;
+      font-size: 0.7rem;
+      color: #5c5346;
+    }
+    @media (max-width: 640px) {
+      .paper-grid2, .paper-grid3 { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
   <script src="data.js"></script>
@@ -18,7 +104,7 @@
     <section class="card hero compact">
       <p class="eyebrow">Daily paper</p>
       <h1>Gazette</h1>
-      <p class="lead">Each server prints its own edition (economy and events in that realm). Pick a server to read today’s paper.</p>
+      <p class="lead">Each server’s latest edition, laid out like the printed paper.</p>
       <div class="stats">
         <div class="stat"><b id="g-count">—</b><span>Editions</span></div>
         <div class="stat"><b id="g-when">—</b><span>Data age</span></div>
@@ -28,46 +114,89 @@
       <label for="server-pick">Server</label>
       <select class="select" id="server-pick" aria-label="Server"></select>
     </div>
-    <div id="content">
-      <div class="skeleton block"></div>
-    </div>
+    <div id="content"><div class="skeleton block"></div></div>
   </main>
   <script>
     (async () => {
-      const { fetchData, el, rich, timeAgo } = Overlord;
+      const { fetchData, el, timeAgo } = Overlord;
       const $ = (id) => document.getElementById(id);
 
-      function renderEdition(ed) {
+      function clean(t) {
+        return String(t || '')
+          .replace(/<@!?\d+>/g, 'someone')
+          .replace(/<a?:\w+:\d+>/g, '')
+          .replace(/\*\*([^*]+)\*\*/g, '$1')
+          .replace(/[█░🪙💰👑🎯🔥🌍📰📈]/g, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+      }
+      function title(t) {
+        return clean(t).replace(/^[^A-Za-z0-9]+/, '') || 'News';
+      }
+
+      function paper(ed) {
         if (!ed) {
           return el('div', { class: 'card' },
-            el('p', { class: 'note', text: 'No Gazette stored for this server yet. It prints around 00:05 UTC after !!events-channel is set.' }));
+            el('p', { class: 'note', text: 'No edition for this server yet.' }));
         }
-        const parts = [
-          el('section', { class: 'card' },
-            el('h2', { text: ed.name }),
-            el('p', { class: 'meta', text: 'Edition · ' + (ed.date || '—') }),
-            el('p', null, rich(ed.editorial || 'No editorial.'))
-          )
-        ];
-        for (const s of ed.sections || []) {
-          parts.push(el('section', { class: 'card' },
-            el('h3', { text: s.name }),
-            el('p', null, rich(s.value || '—'))
+        const sections = (ed.sections || []).map((s) => ({
+          name: title(s.name),
+          value: clean(s.value),
+        }));
+        const lead = sections[0] || { name: 'Realm report', value: '' };
+        const editorial = clean(ed.editorial || 'Nothing on the wire today.');
+        const body = [editorial, lead.value].filter(Boolean).join(' ');
+
+        const root = el('div', { class: 'paper' });
+        root.append(
+          el('div', { class: 'paper-top' },
+            el('span', { text: 'Issue · ' + (ed.date || '') }),
+            el('span', { text: 'News' })
+          ),
+          el('div', { class: 'paper-mast' },
+            el('h2', { text: 'Gazette' }),
+            el('p', { text: "The Overlord's Daily" })
+          ),
+          el('hr', { class: 'paper-rule' }),
+          el('div', { class: 'paper-lead' },
+            el('h3', { text: lead.name }),
+            el('div', { class: 'paper-date', text: ed.date || '' }),
+            el('p', { text: body })
+          ),
+          el('hr', { class: 'paper-rule' })
+        );
+
+        const g2 = el('div', { class: 'paper-grid2' });
+        for (let i = 1; i <= 2; i++) {
+          const s = sections[i] || { name: 'Notes', value: 'Quiet.' };
+          g2.append(el('div', { class: 'paper-col' },
+            el('h4', { text: s.name }),
+            el('p', { text: s.value })
           ));
         }
-        return el('div', null, ...parts);
+        root.append(g2, el('hr', { class: 'paper-rule' }));
+
+        const g3 = el('div', { class: 'paper-grid3' });
+        for (let i = 3; i <= 5; i++) {
+          const s = sections[i] || sections[i - 3] || { name: 'Brief', value: '—' };
+          g3.append(el('div', { class: 'paper-brief' },
+            el('h4', { text: s.name }),
+            el('p', { text: s.value })
+          ));
+        }
+        root.append(g3, el('div', { class: 'paper-foot', text: ed.name + ' · Printed for the realm' }));
+        return root;
       }
 
       try {
         const g = await fetchData('gazettes.json');
         $('g-count').textContent = String(g.count || 0);
         $('g-when').textContent = g.generatedAt ? timeAgo(g.generatedAt) : '—';
-
         const sel = $('server-pick');
         const list = g.editions || [];
         if (!list.length) {
-          sel.replaceChildren(el('option', { text: 'No editions yet' }));
-          $('content').replaceChildren(renderEdition(null));
+          sel.appendChild(el('option', { text: 'No editions yet' }));
+          $('content').replaceChildren(paper(null));
           return;
         }
         for (const ed of list) {
@@ -75,13 +204,13 @@
         }
         const show = () => {
           const ed = list.find((e) => e.guildId === sel.value) || list[0];
-          $('content').replaceChildren(renderEdition(ed));
+          $('content').replaceChildren(paper(ed));
         };
         sel.onchange = show;
         show();
-      } catch (err) {
+      } catch {
         $('content').replaceChildren(el('div', { class: 'card' },
-          el('p', { class: 'meta', text: 'Gazette data could not be loaded. Wait for the next website export (gazettes.json).' })));
+          el('p', { class: 'meta', text: 'Could not load gazettes.json yet.' })));
       }
     })();
   </script>

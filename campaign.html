@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>World Campaign — Global Conquest Map</title>
+  <meta name="description" content="Live global campaign for The Overlord: shared map, server houses, provinces, and turn timer." />
+  <link rel="canonical" href="https://thefallenstargg.github.io/Overlord-Website/campaign.html" />
+  <meta name="theme-color" content="#e0b84a" />
+  <meta property="og:title" content="World Campaign — Global Conquest Map" />
+  <meta property="og:description" content="Live global campaign for The Overlord: shared map, server houses, provinces, and turn timer." />
+  <meta property="og:url" content="https://thefallenstargg.github.io/Overlord-Website/campaign.html" />
+  <meta property="og:image" content="https://thefallenstargg.github.io/Overlord-Website/og-image.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <script src="data.js"></script>
+  <main class="wrap">
+    <section class="card hero compact">
+      <p class="eyebrow">Global realm</p>
+      <h1>Campaign</h1>
+      <p class="lead">One shared map. Each Discord server is a house named after the server. Land, armies, and ticks are the same everywhere.</p>
+      <div class="stats">
+        <div class="stat"><b id="c-status">—</b><span>Status</span></div>
+        <div class="stat"><b id="c-turn">—</b><span>Turn</span></div>
+        <div class="stat"><b id="c-houses">—</b><span>Houses</span></div>
+        <div class="stat"><b id="c-land">—</b><span>Provinces held</span></div>
+      </div>
+    </section>
+    <div id="content">
+      <div class="skeleton block"></div>
+      <div class="skeleton block"></div>
+    </div>
+  </main>
+  <script>
+    (async () => {
+      const { fetchData, el, rich, timeAgo, fmt, DATA_BASE } = Overlord;
+      const $ = (id) => document.getElementById(id);
+      const card = (title, sub, body) =>
+        el('section', { class: 'card' },
+          el('h2', { text: title }),
+          sub ? el('p', { class: 'meta', text: sub }) : null,
+          body
+        );
+      try {
+        const c = await fetchData('campaign.json');
+        const held = (c.provinces || []).filter((p) => p.ownerId).length;
+        const total = (c.provinces || []).length;
+        $('c-status').textContent = !c.active ? 'Off' : c.paused ? 'Paused' : 'Active';
+        $('c-turn').textContent = String(c.turn ?? 0);
+        $('c-houses').textContent = fmt(c.houseCount || 0);
+        $('c-land').textContent = held + '/' + total;
+
+        const out = [];
+
+        const mapUrl = DATA_BASE + (c.mapImage || 'campaign-map.png');
+        out.push(card('Map', 'Updated when the bot exports website data.',
+          el('div', { class: 'map-frame' },
+            el('img', {
+              src: mapUrl,
+              alt: 'Campaign map',
+              style: 'width:100%;height:auto;border-radius:12px;background:#1a1520',
+              onerror: "this.replaceWith(Object.assign(document.createElement('p'),{className:'note',textContent:'Map image not exported yet. It appears after the next website export if canvas is available on the host.'}))"
+            })
+          )
+        ));
+
+        out.push(card('Season', null,
+          el('p', { class: 'meta' },
+            document.createTextNode('Season key: ' + (c.seasonKey || '—') + ' · Next resolve: ' +
+              (c.nextTickAt ? new Date(c.nextTickAt).toUTCString() : '—') +
+              (c.full ? ' · Map is FULL' : ' · Neutral: ' + (c.neutral ?? '—')))
+          )
+        ));
+
+        out.push(card('Houses', 'One house per server.',
+          (c.houses || []).length
+            ? el('div', { class: 'lb-list' },
+                c.houses.map((h, i) =>
+                  el('div', { class: 'lb-row' },
+                    el('span', { class: 'rank', text: String(i + 1) }),
+                    el('div', { class: 'lb-main' },
+                      el('strong', { text: h.name }),
+                      el('span', { class: 'meta', text: (h.provinceCount || 0) + ' provinces · ' + fmt(h.score || 0) + ' pts' })
+                    )
+                  )
+                )
+              )
+            : el('p', { class: 'note', text: 'No houses registered yet.' })
+        ));
+
+        out.push(card('Provinces', null,
+          el('div', { class: 'lb-list' },
+            (c.provinces || []).map((p) =>
+              el('div', { class: 'lb-row' },
+                el('div', { class: 'lb-main' },
+                  el('strong', { text: p.name }),
+                  el('span', { class: 'meta', text: p.ownerName
+                    ? ('Held by ' + p.ownerName + (p.armies?.length ? ' · ' + p.armies.map(a => a.size + ' (' + a.houseName + ')').join(', ') : ''))
+                    : 'Neutral' })
+                )
+              )
+            )
+          )
+        ));
+
+        if ((c.log || []).length) {
+          out.push(card('Recent log', null,
+            el('ul', { class: 'plain' },
+              c.log.map((e) => el('li', { text: (e.at ? timeAgo(e.at) + ' — ' : '') + e.text }))
+            )
+          ));
+        }
+
+        out.push(el('p', { class: 'meta', text: 'Data from ' + timeAgo(c.generatedAt) + '. In Discord: !!campaign' }));
+        $('content').replaceChildren(...out);
+      } catch (err) {
+        $('content').replaceChildren(el('div', { class: 'card' },
+          el('p', { class: 'meta', text: 'Campaign data could not be loaded. It appears after the bot exports campaign.json.' })));
+      }
+    })();
+  </script>
+</body>
+</html>

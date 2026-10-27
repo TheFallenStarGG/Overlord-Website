@@ -19,6 +19,8 @@
     ['stocks.html', 'Stocks', '📈', 'Live prices, charts and news'],
     ['servers.html', 'Servers', '🌐', 'Browse listed servers'],
     ['wars.html', 'Wars', '⚔️', 'Weekly server vs server'],
+    ['campaign.html', 'Campaign', '🗺️', 'Global conquest map'],
+    ['gazette.html', 'Gazette', '📰', 'Daily paper per server'],
     ['status.html', 'Status', '📡', 'Is the bot online?'],
     ['changelog.html', 'Changelog', '📜', 'What changed lately'],
     ['dashboard.html', 'Dashboard', '👤', 'Log in: your stats and server settings'],
@@ -170,7 +172,7 @@
           el('div', { class: 'foot-brand' },
             el('a', { class: 'brand', href: 'index.html' }, brandMark(), el('span', { class: 'brand-text', text: 'The Overlord' })),
             el('p', { class: 'foot-blurb', text: 'A Discord bot with a server economy, a living realm, duels, bosses and a stock market.' })),
-            col('Explore', inFooter(['commands.html', 'wiki.html', 'leaderboards.html', 'stocks.html', 'servers.html', 'wars.html'])),
+            col('Explore', inFooter(['commands.html', 'wiki.html', 'leaderboards.html', 'stocks.html', 'servers.html', 'wars.html', 'campaign.html', 'gazette.html'])),
            col('More', inFooter(['status.html', 'changelog.html', 'setup.html', 'dashboard.html'])),
           col('Help', [
             ['Support server', SUPPORT, true],

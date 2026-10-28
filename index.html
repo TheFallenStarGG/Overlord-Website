@@ -81,10 +81,15 @@
         A shared realm for your server: coins, chaos, and a <strong>global Campaign map</strong> every server can fight over.
         Optional depth — ignore half of it and still have a working economy.
       </p>
-      <div class="cta-row">
-        <a class="btn" id="invite-btn" href="#">Invite</a>
-        <a class="btn btn-ghost" href="setup.html">Setup guide</a>
-        <a class="btn btn-ghost" href="https://top.gg/bot/1555446743515144232/vote" target="_blank" rel="noopener">Vote on top.gg</a>
+      <div class="cta-row home-cta">
+        <a class="btn" id="invite-btn" href="#">Add to Discord</a>
+        <span class="cta-links">
+          <a href="setup.html">Setup</a>
+          <span class="cta-sep" aria-hidden="true">·</span>
+          <a href="https://top.gg/bot/1555446743515144232/vote" target="_blank" rel="noopener">Vote</a>
+          <span class="cta-sep" aria-hidden="true">·</span>
+          <a href="commands.html">Commands</a>
+        </span>
       </div>
       <div class="pill-row" aria-label="Highlights">
         <span class="pill">World Campaign</span>
@@ -102,7 +107,10 @@
     </section>
 
     <div id="news-ticker" class="news-ticker" hidden>
-      <div class="news-track" id="news-track"></div>
+      <span class="news-ticker-label">Live</span>
+      <div class="news-ticker-viewport">
+        <div class="news-ticker-track" id="news-track"></div>
+      </div>
     </div>
 
     <!-- What it is -->

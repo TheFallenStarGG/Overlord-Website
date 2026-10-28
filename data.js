@@ -4,6 +4,8 @@
   const DATA_BASE = 'https://raw.githubusercontent.com/TheFallenStarGG/Overlord-Website/data/';
   const INVITE = 'https://discord.com/api/oauth2/authorize?client_id=1555446743515144232&permissions=268438528&scope=bot%20applications.commands';
   const SUPPORT = 'https://discord.gg/vZrsPCMHys';
+  const TOPGG = 'https://top.gg/bot/1555446743515144232';
+  const TOPGG_VOTE = 'https://top.gg/bot/1555446743515144232/vote';
   const GITHUB = 'https://github.com/TheFallenStarGG/OverLord-Bot';
   const EMAIL = 'mailto:DarkstarGaming2326@proton.me';
   const ONLINE_WITHIN_MIN = 25; // the bot checks in about every 10 minutes
@@ -176,6 +178,8 @@
            col('More', inFooter(['status.html', 'changelog.html', 'setup.html', 'dashboard.html'])),
           col('Help', [
             ['Support server', SUPPORT, true],
+            ['top.gg', TOPGG, true],
+            ['Vote on top.gg', TOPGG_VOTE, true],
             ['Source code', GITHUB, true],
             ['Email', EMAIL],
             ['Terms', 'terms.html'],
@@ -229,7 +233,7 @@
     return box;
   }
 
-  window.Overlord = { fetchData, fmt, el, rich, timeAgo, duration, dateText, botState, toast, copy, pages, avatar, medal, INVITE, SUPPORT, DATA_BASE };
+  window.Overlord = { fetchData, fmt, el, rich, timeAgo, duration, dateText, botState, toast, copy, pages, avatar, medal, INVITE, SUPPORT, TOPGG, TOPGG_VOTE, DATA_BASE };
   
   // Cookie / local storage notice (GDPR-style). Choice is stored so the bar only shows once.
   function showCookieBanner() {

@@ -38,8 +38,25 @@
 </head>
 <body>
   <script src="data.js"></script>
-
   <main class="wrap">
+    <section class="card live-strip" id="live-strip" aria-label="Live status">
+      <div class="live-grid" id="live-grid">
+        <div class="live-item"><span class="live-k">Bot</span><strong id="live-bot">…</strong></div>
+        <div class="live-item"><span class="live-k">Campaign</span><strong id="live-camp">…</strong></div>
+        <div class="live-item"><span class="live-k">Gazette</span><strong id="live-gaz">…</strong></div>
+        <div class="live-item"><span class="live-k">top.gg</span><strong id="live-top">…</strong></div>
+      </div>
+      <p class="meta" id="live-meta"></p>
+      <p class="meta">
+        New here? <a href="setup.html">Setup</a> · <code>!!tutorial</code> in Discord ·
+        <a id="live-vote" href="https://top.gg/bot/1555446743515144232/vote" target="_blank" rel="noopener">Vote on top.gg</a>
+      </p>
+      <p class="topgg-widget">
+        <a href="https://top.gg/bot/1555446743515144232" target="_blank" rel="noopener">
+          <img src="https://top.gg/api/widget/1555446743515144232.svg" alt="The Overlord on top.gg" width="300" height="150" loading="lazy" />
+        </a>
+      </p>
+        </section>
     <section class="card hero">
       <p class="eyebrow">Discord bot · commands start with !!</p>
       <h1>The Overlord</h1>
@@ -131,6 +148,53 @@
   <script>
     (() => {
       const { fetchData, fmt, el, rich, botState, pages } = Overlord;
+      // Live strip: bot status + campaign + gazette + top.gg stats
+      (async () => {
+        const botEl = document.getElementById('live-bot');
+        const campEl = document.getElementById('live-camp');
+        const gazEl = document.getElementById('live-gaz');
+        const topEl = document.getElementById('live-top');
+        const metaEl = document.getElementById('live-meta');
+        try {
+          const s = await fetchData('status.json');
+          botEl.textContent = s?.ok || s?.online ? 'Online' : (s ? 'Status file ok' : 'Unknown');
+        } catch {
+          botEl.textContent = 'Unknown';
+        }
+        try {
+          const c = await fetchData('campaign.json');
+          campEl.textContent = c?.active
+            ? `Turn ${c.turn ?? 0}` + (c.seasonKey ? ` · ${c.seasonKey}` : '')
+            : 'Off';
+        } catch {
+          campEl.textContent = '—';
+        }
+        try {
+          const g = await fetchData('gazettes.json');
+          gazEl.textContent = g?.count ? `${g.count} edition(s)` : 'None yet';
+        } catch {
+          gazEl.textContent = '—';
+        }
+        try {
+          // Public top.gg stats (no token). Falls back if blocked.
+          const r = await fetch('https://top.gg/api/public/bots/1555446743515144232', {
+            signal: AbortSignal.timeout(8000),
+          });
+          if (r.ok) {
+            const j = await r.json();
+            const points = j.points ?? j.monthlyPoints;
+            const servers = j.serverCount ?? j.server_count;
+            topEl.textContent =
+              (points != null ? `${points} votes` : 'Listed') +
+              (servers != null ? ` · ${servers} servers` : '');
+          } else {
+            topEl.textContent = 'Listed';
+          }
+        } catch {
+          topEl.textContent = 'Listed';
+        }
+        if (metaEl) metaEl.textContent = 'Strip updates when the bot exports data / when top.gg answers.';
+      })();
       const $ = (id) => document.getElementById(id);
 
       // A tile for every page that exists

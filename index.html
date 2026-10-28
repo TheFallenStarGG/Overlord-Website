@@ -4,15 +4,15 @@
   <meta name="google-site-verification" content="eRK5m3yVKrkN8oUPL3krK8RsOA0tPudHCQw-Tc80TbI" />
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>The Overlord — Discord Economy, Realm Board & Server Wars Bot</title>
-  <meta name="description" content="A Discord bot with a living realm: shared weather and events, server economy, stocks that can crash, cross-server raids, weekly server wars, bounties, and a self-updating realm board. Commands use !!." />
+  <title>The Overlord — Discord Economy, World Campaign &amp; Realm Bot</title>
+  <meta name="description" content="Discord bot with a shared realm: economy, stocks, World Campaign map, daily Gazette newspaper, raids, wars, and !! commands. Free to add." />
   <meta name="theme-color" content="#e0b84a" />
   <link rel="canonical" href="https://thefallenstargg.github.io/Overlord-Website/" />
   <link rel="stylesheet" href="styles.css" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="The Overlord" />
-  <meta property="og:title" content="The Overlord — Discord Economy, Realm Board & Server Wars Bot" />
-  <meta property="og:description" content="A Discord bot with a living realm: shared weather and events, server economy, stocks that can crash, cross-server raids, weekly server wars, bounties, and a self-updating realm board. Commands use !!." />
+  <meta property="og:title" content="The Overlord — Discord Economy, World Campaign &amp; Realm Bot" />
+  <meta property="og:description" content="Shared realm economy, global Campaign map, daily Gazette paper, stocks, raids, and more. Commands use !!." />
   <meta property="og:image" content="https://thefallenstargg.github.io/Overlord-Website/og-image.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
@@ -25,121 +25,211 @@
     "name": "The Overlord",
     "applicationCategory": "GameApplication",
     "operatingSystem": "Discord",
-    "description": "A Discord bot with a living realm: shared weather and events, server economy, stocks that can crash, cross-server raids, weekly server wars, bounties, and a self-updating realm board. Commands use !!.",
+    "description": "Discord bot with a shared realm economy, World Campaign, daily Gazette, stocks, raids, and !! commands.",
     "url": "https://thefallenstargg.github.io/Overlord-Website/",
     "image": "https://thefallenstargg.github.io/Overlord-Website/og-image.png",
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "USD"
-    }
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
   }
-    </script>
+  </script>
+  <style>
+    .home-hero .lead { max-width: 38rem; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0 0; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      padding: 0.35rem 0.75rem; border-radius: 999px;
+      background: rgba(224, 184, 74, 0.12); border: 1px solid rgba(224, 184, 74, 0.25);
+      font-size: 0.8rem; color: var(--text, #eee);
+    }
+    .feature-grid {
+      display: grid; gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      list-style: none; padding: 0; margin: 0;
+    }
+    .feature-grid .feature-card { margin: 0; height: 100%; }
+    .pulse-grid {
+      display: grid; gap: 0.75rem;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    }
+    .pulse-item {
+      background: rgba(255,255,255,0.04); border-radius: 12px; padding: 0.75rem 0.85rem;
+    }
+    .pulse-k {
+      display: block; font-size: 0.68rem; letter-spacing: 0.07em;
+      text-transform: uppercase; opacity: 0.6; margin-bottom: 0.25rem;
+    }
+    .pulse-aside {
+      display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-start;
+      margin-top: 1rem;
+    }
+    .pulse-aside .topgg-widget { margin: 0; flex: 0 0 auto; }
+    .pulse-aside .topgg-widget img { display: block; border-radius: 10px; max-width: 280px; height: auto; }
+    .two-col {
+      display: grid; gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+  </style>
 </head>
 <body>
   <script src="data.js"></script>
+
   <main class="wrap">
-    <section class="card live-strip" id="live-strip" aria-label="Live status">
-      <div class="live-grid" id="live-grid">
-        <div class="live-item"><span class="live-k">Bot</span><strong id="live-bot">…</strong></div>
-        <div class="live-item"><span class="live-k">Campaign</span><strong id="live-camp">…</strong></div>
-        <div class="live-item"><span class="live-k">Gazette</span><strong id="live-gaz">…</strong></div>
-        <div class="live-item"><span class="live-k">top.gg</span><strong id="live-top">…</strong></div>
-      </div>
-      <p class="meta" id="live-meta"></p>
-      <p class="meta">
-        New here? <a href="setup.html">Setup</a> · <code>!!tutorial</code> in Discord ·
-        <a id="live-vote" href="https://top.gg/bot/1555446743515144232/vote" target="_blank" rel="noopener">Vote on top.gg</a>
-      </p>
-      <p class="topgg-widget">
-        <a href="https://top.gg/bot/1555446743515144232" target="_blank" rel="noopener">
-          <img src="https://top.gg/api/widget/1555446743515144232.svg" alt="The Overlord on top.gg" width="300" height="150" loading="lazy" />
-        </a>
-      </p>
-        </section>
-    <section class="card hero">
+    <!-- Hero -->
+    <section class="card hero home-hero">
       <p class="eyebrow">Discord bot · commands start with !!</p>
       <h1>The Overlord</h1>
       <p class="lead">
-        A bot that runs a little economy and a shared “realm” in your server — weather, events, bounties, stocks, the usual chaos.
-        You can ignore most of it and still check the board, or dig into crafting, duels, and the market.
+        A shared realm for your server: coins, chaos, and a <strong>global Campaign map</strong> every server can fight over.
+        Optional depth — ignore half of it and still have a working economy.
       </p>
       <div class="cta-row">
-        <a class="btn btn-lg" href="https://discord.com/api/oauth2/authorize?client_id=1555446743515144232&permissions=268438528&scope=bot%20applications.commands">Add to server</a>
-        <a class="btn btn-lg btn-secondary" href="commands.html">Command list</a>
+        <a class="btn" id="invite-btn" href="#">Invite</a>
+        <a class="btn btn-ghost" href="setup.html">Setup guide</a>
+        <a class="btn btn-ghost" href="https://top.gg/bot/1555446743515144232/vote" target="_blank" rel="noopener">Vote on top.gg</a>
       </div>
-      <div class="stats">
+      <div class="pill-row" aria-label="Highlights">
+        <span class="pill">World Campaign</span>
+        <span class="pill">Daily Gazette</span>
+        <span class="pill">Stocks &amp; bank</span>
+        <span class="pill">Raids &amp; wars</span>
+        <span class="pill">Free · !! commands</span>
+      </div>
+      <div class="stats" style="margin-top:1.25rem">
         <div class="stat"><b id="st-servers">—</b><span>Servers</span></div>
-        <div class="stat"><b id="st-players">—</b><span>Players</span></div>
+        <div class="stat"><b id="st-players">—</b><span>Tracked players</span></div>
         <div class="stat"><b id="st-commands">—</b><span>Commands</span></div>
-        <div class="stat"><b id="st-status">—</b><span>Status</span></div>
+        <div class="stat"><b id="st-status" class="ok">—</b><span>Status</span></div>
       </div>
-      <p class="meta tight">
-        Open source on
-        <a href="https://github.com/TheFallenStarGG/OverLord-Bot" target="_blank" rel="noopener">GitHub</a>.
-        Slash commands exist but are still rough — <code>!!</code> is the main way to use it.
-      </p>
     </section>
 
-    <div id="latest"></div>
+    <div id="news-ticker" class="news-ticker" hidden>
+      <div class="news-track" id="news-track"></div>
+    </div>
 
+    <!-- What it is -->
     <section class="card">
-      <h2 class="section-title">What it actually does</h2>
+      <h2 class="section-title">What you actually get</h2>
       <ul class="feature-grid">
         <li class="feature-card">
-          <div class="feature-icon">🏰</div>
-          <h3>Realm board</h3>
+          <div class="feature-icon">🗺️</div>
+          <h3>World Campaign</h3>
           <p>
-            One message that updates itself: weather, active events, bounty, throne, market news.
-            Set it with <code>!!settings board #channel</code>. Or just run <code>!!board</code> whenever.
+            One shared map. Your server is a house. Take cities, siege neighbors, collect taxes, fight the AI Shadow Court.
+            Seasons reset the board. <a href="campaign.html">Live map →</a>
+          </p>
+        </li>
+        <li class="feature-card">
+          <div class="feature-icon">📰</div>
+          <h3>The Gazette</h3>
+          <p>
+            A daily newspaper image for the realm — richest players, headlines, weather, campaign notes.
+            <a href="gazette.html">Today’s papers →</a>
           </p>
         </li>
         <li class="feature-card">
           <div class="feature-icon">🪙</div>
-          <h3>Coins &amp; stuff</h3>
+          <h3>Economy</h3>
           <p>
-            Daily, work, shop, fish, mine, craft, trade. Stocks exist and can go bankrupt — don’t put in what you can’t lose.
+            Daily, work, shop, fish, mine, rob, bank, heists. Optional scarce mode. Coins are per-server and worthless IRL.
+          </p>
+        </li>
+        <li class="feature-card">
+          <div class="feature-icon">📈</div>
+          <h3>Stocks &amp; chaos</h3>
+          <p>
+            Companies rise, crash, get bought out. Weather, decrees, bounties, rebellion meter. <a href="stocks.html">Market →</a>
           </p>
         </li>
         <li class="feature-card">
           <div class="feature-icon">⚔️</div>
-          <h3>Combat &amp; games</h3>
+          <h3>Combat &amp; raids</h3>
           <p>
-            Duels, bosses, forge gear, a few minigames. Optional. Nobody has to participate.
+            Duels, bosses, gear, ranked play, cross-server raids. Turn raids off per server if you don’t want them.
           </p>
         </li>
         <li class="feature-card">
-          <div class="feature-icon">📜</div>
-          <h3>Server events</h3>
+          <div class="feature-icon">🎮</div>
+          <h3>Games</h3>
           <p>
-            Decrees, weather, bounties, rebellion meter, a daily Gazette. Feed goes to a channel you pick under settings.
+            Wordle, cards, board games, a few gamble commands (admins can disable betting). Prefix is still !! everywhere.
           </p>
         </li>
       </ul>
     </section>
 
+    <!-- First steps -->
+    <section class="card">
+      <h2 class="section-title">First five minutes</h2>
+      <div class="two-col">
+        <div>
+          <h3 class="meta" style="opacity:1;font-size:1rem;margin:0 0 0.5rem">Players</h3>
+          <ol class="steps">
+            <li><code>!!tutorial</code> — short walkthrough</li>
+            <li><code>!!daily</code> · <code>!!work</code> · <code>!!balance</code></li>
+            <li><code>!!campaign map</code> — see the world war</li>
+            <li><code>!!vote</code> after voting on top.gg (coins every 12h)</li>
+          </ol>
+        </div>
+        <div>
+          <h3 class="meta" style="opacity:1;font-size:1rem;margin:0 0 0.5rem">Admins</h3>
+          <ol class="steps">
+            <li>Invite (Manage Server). Open <a href="setup.html">Setup</a>.</li>
+            <li><code>!!events-channel #channel</code> — Gazette &amp; world posts</li>
+            <li><code>!!tutorial admin</code> · <code>!!settings</code></li>
+            <li>Optional: <code>!!raid-config optout</code> if you don’t want raids</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- Explore -->
     <section class="card">
       <h2 class="section-title">Explore the site</h2>
       <ul class="tiles" id="tiles"></ul>
     </section>
 
-    <section class="card">
-      <h2 class="section-title">First five minutes</h2>
-      <ol class="steps">
-        <li>Invite the bot (you need <strong>Manage Server</strong>).</li>
-        <li>Type <code>!!help</code> in a channel it can see.</li>
-        <li>Admins: <code>!!settings</code> for events channel, level-ups, realm board, etc.</li>
-        <li><code>!!tutorial</code> if you want the in-bot walkthrough.</li>
-      </ol>
-      <p class="meta">More detail on the <a href="setup.html">Setup</a> page.</p>
+    <!-- Realm pulse (live strip — NOT at the top) -->
+    <section class="card" id="live-strip" aria-label="Realm pulse">
+      <h2 class="section-title">Realm pulse</h2>
+      <p class="meta" style="margin-top:0">
+        Live bits from the bot’s data export and top.gg. Not a dashboard — just a quick pulse.
+      </p>
+      <div class="pulse-grid" id="live-grid">
+        <div class="pulse-item"><span class="pulse-k">Bot</span><strong id="live-bot">…</strong></div>
+        <div class="pulse-item"><span class="pulse-k">Campaign</span><strong id="live-camp">…</strong></div>
+        <div class="pulse-item"><span class="pulse-k">Gazette</span><strong id="live-gaz">…</strong></div>
+        <div class="pulse-item"><span class="pulse-k">top.gg</span><strong id="live-top">…</strong></div>
+      </div>
+      <div class="pulse-aside">
+        <p class="meta" style="flex:1;min-width:12rem;margin:0">
+          Deeper pages:
+          <a href="campaign.html">Campaign</a> ·
+          <a href="gazette.html">Gazette</a> ·
+          <a href="status.html">Status</a> ·
+          <a href="https://top.gg/bot/1555446743515144232/vote" target="_blank" rel="noopener">Vote</a>
+        </p>
+        <p class="topgg-widget">
+          <a href="https://top.gg/bot/1555446743515144232" target="_blank" rel="noopener">
+            <img
+              src="https://top.gg/api/widget/1555446743515144232.svg"
+              alt="The Overlord on top.gg"
+              width="300"
+              height="150"
+              loading="lazy"
+            />
+          </a>
+        </p>
+      </div>
     </section>
+
+    <div id="latest"></div>
 
     <section class="card">
       <h2 class="section-title">Links</h2>
       <ul class="feature-list">
+        <li><a href="https://top.gg/bot/1555446743515144232" target="_blank" rel="noopener">top.gg listing</a></li>
         <li><a href="https://github.com/TheFallenStarGG/OverLord-Bot" target="_blank" rel="noopener">Source code</a></li>
         <li><a href="terms.html">Terms</a> · <a href="privacy.html">Privacy</a></li>
-        <li>Support server: <a href="https://discord.gg/vZrsPCMHys" target="_blank" rel="noopener">discord.gg/vZrsPCMHys</a></li>
+        <li>Support: <a href="https://discord.gg/vZrsPCMHys" target="_blank" rel="noopener">discord.gg/vZrsPCMHys</a></li>
         <li>Contact: Discord <strong>TheFallenStarGG</strong> · <a href="mailto:DarkstarGaming2326@proton.me">email</a></li>
       </ul>
     </section>
@@ -147,118 +237,136 @@
 
   <script>
     (() => {
-      const { fetchData, fmt, el, rich, botState, pages } = Overlord;
-      // Live strip: bot status + campaign + gazette + top.gg stats
-      (async () => {
-        const botEl = document.getElementById('live-bot');
-        const campEl = document.getElementById('live-camp');
-        const gazEl = document.getElementById('live-gaz');
-        const topEl = document.getElementById('live-top');
-        const metaEl = document.getElementById('live-meta');
-        try {
-          const s = await fetchData('status.json');
-          botEl.textContent = s?.ok || s?.online ? 'Online' : (s ? 'Status file ok' : 'Unknown');
-        } catch {
-          botEl.textContent = 'Unknown';
-        }
-        try {
-          const c = await fetchData('campaign.json');
-          campEl.textContent = c?.active
-            ? `Turn ${c.turn ?? 0}` + (c.seasonKey ? ` · ${c.seasonKey}` : '')
-            : 'Off';
-        } catch {
-          campEl.textContent = '—';
-        }
-        try {
-          const g = await fetchData('gazettes.json');
-          gazEl.textContent = g?.count ? `${g.count} edition(s)` : 'None yet';
-        } catch {
-          gazEl.textContent = '—';
-        }
-        try {
-          // Public top.gg stats (no token). Falls back if blocked.
-          const r = await fetch('https://top.gg/api/public/bots/1555446743515144232', {
-            signal: AbortSignal.timeout(8000),
-          });
-          if (r.ok) {
-            const j = await r.json();
-            const points = j.points ?? j.monthlyPoints;
-            const servers = j.serverCount ?? j.server_count;
-            topEl.textContent =
-              (points != null ? `${points} votes` : 'Listed') +
-              (servers != null ? ` · ${servers} servers` : '');
-          } else {
-            topEl.textContent = 'Listed';
-          }
-        } catch {
-          topEl.textContent = 'Listed';
-        }
-        if (metaEl) metaEl.textContent = 'Strip updates when the bot exports data / when top.gg answers.';
-      })();
+      const { fetchData, fmt, el, rich, botState, pages, INVITE } = Overlord;
       const $ = (id) => document.getElementById(id);
 
-      // A tile for every page that exists
-      $('tiles').replaceChildren(...pages().map((p) =>
-        el('li', {}, el('a', { class: 'tile', href: p.href },
-          el('span', { class: 't-icon', 'aria-hidden': 'true', text: p.icon }),
-          el('strong', { text: p.label }),
-          el('small', { text: p.desc })))));
+      const invite = $('invite-btn');
+      if (invite && INVITE) invite.href = INVITE;
 
-      // Live numbers (each one fills in on its own, and stays "—" if it can't load)
-      fetchData('status.json').then((s) => {
-        const { online } = botState(s);
-        $('st-servers').textContent = fmt(s.servers);
-        $('st-status').textContent = online ? 'Online' : 'Offline';
-        $('st-status').className = online ? 'ok' : 'bad';
-      }).catch(() => {});
+      // Site tiles
+      const tileBox = $('tiles');
+      if (tileBox) {
+        tileBox.replaceChildren(
+          ...pages()
+            .filter((p) => p.href !== 'index.html')
+            .map((p) =>
+              el('li', {},
+                el('a', { class: 'tile', href: p.href },
+                  el('span', { class: 't-icon', 'aria-hidden': 'true', text: p.icon || '·' }),
+                  el('strong', { text: p.label }),
+                  el('small', { text: p.desc || '' })
+                )
+              )
+            )
+        );
+      }
 
-      // Cross-server news strip (last 24h, max 30 — built by the bot)
+      // Hero stats
+      fetchData('status.json')
+        .then((s) => {
+          const { online } = botState(s);
+          if (s.servers != null) $('st-servers').textContent = fmt(s.servers);
+          $('st-status').textContent = online ? 'Online' : 'Offline';
+          $('st-status').className = online ? 'ok' : 'bad';
+          $('live-bot').textContent = online ? 'Online' : 'Offline';
+        })
+        .catch(() => {
+          $('live-bot').textContent = 'Unknown';
+        });
+
+      fetchData('leaderboards.json')
+        .then((d) => {
+          if (d.totals?.players != null) $('st-players').textContent = fmt(d.totals.players);
+          if ($('st-servers').textContent === '—' && d.totals?.servers != null) {
+            $('st-servers').textContent = fmt(d.totals.servers);
+          }
+        })
+        .catch(() => {});
+
+      fetchData('commands.json')
+        .then((d) => {
+          if (d.total != null) $('st-commands').textContent = fmt(d.total);
+        })
+        .catch(() => {});
+
+      // News ticker
       fetchData('news.json')
         .then((d) => {
           const items = Array.isArray(d.items) ? d.items : [];
           if (!items.length) return;
-
           const track = $('news-track');
           const bar = $('news-ticker');
           if (!track || !bar) return;
-
-          const bits = items.map((it) => {
-            const server = it.server || 'Server';
-            const text = it.text || '';
-            return `【${server}】 ${text}`;
-          });
-
-          // Duplicate the line so the scroll can loop smoothly
+          const bits = items.map((it) => `【${it.server || 'Server'}】 ${it.text || ''}`);
           const line = bits.join('   ·   ') + '   ·   ';
           track.textContent = line + line;
           bar.hidden = false;
         })
         .catch(() => {});
 
-      fetchData('leaderboards.json').then((d) => {
-        if (d.totals) $('st-players').textContent = fmt(d.totals.players);
-        if ($('st-servers').textContent === '—' && d.totals) $('st-servers').textContent = fmt(d.totals.servers);
-      }).catch(() => {});
+      // Realm pulse
+      fetchData('campaign.json')
+        .then((c) => {
+          $('live-camp').textContent = c?.active
+            ? `Turn ${c.turn ?? 0}` + (c.seasonKey ? ` · ${c.seasonKey}` : '')
+            : 'Off';
+        })
+        .catch(() => {
+          $('live-camp').textContent = '—';
+        });
 
-      fetchData('commands.json').then((d) => {
-        $('st-commands').textContent = fmt(d.total);
-      }).catch(() => {});
+      fetchData('gazettes.json')
+        .then((g) => {
+          $('live-gaz').textContent = g?.count ? `${g.count} edition(s)` : 'None yet';
+        })
+        .catch(() => {
+          $('live-gaz').textContent = '—';
+        });
 
-      // Latest update from the changelog
-      fetchData('changelog.json').then(({ updates }) => {
-        const u = updates[0];
-        if (!u) return;
-        const accent = /^#[0-9a-f]{6}$/i.test(u.color) ? u.color : '#e0b84a';
-        $('latest').replaceChildren(
-          el('section', { class: 'card teaser', style: '--accent:' + accent },
-            el('span', { class: 'log-emoji', 'aria-hidden': 'true', text: u.emoji }),
-            el('div', {},
-              el('p', { class: 'log-date', text: 'Latest update · ' + u.date }),
-              el('h2', { text: u.title }),
-              el('p', {}, rich(u.summary)),
-              el('a', { href: 'changelog.html#update-' + updates.length, text: 'Read the full changelog →' }))));
-      }).catch(() => {});
+      fetch('https://top.gg/api/public/bots/1555446743515144232', { signal: AbortSignal.timeout(8000) })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((j) => {
+          if (!j) {
+            $('live-top').textContent = 'Listed';
+            return;
+          }
+          const points = j.points ?? j.monthlyPoints;
+          const servers = j.serverCount ?? j.server_count;
+          $('live-top').textContent =
+            (points != null ? `${points} votes` : 'Listed') +
+            (servers != null ? ` · ${servers} servers` : '');
+        })
+        .catch(() => {
+          $('live-top').textContent = 'Listed';
+        });
+
+      // Latest changelog teaser
+      fetchData('changelog.json')
+        .then(({ updates }) => {
+          const u = updates && updates[0];
+          if (!u) return;
+          const accent = /^#[0-9a-f]{6}$/i.test(u.color) ? u.color : '#e0b84a';
+          $('latest').replaceChildren(
+            el(
+              'section',
+              { class: 'card teaser', style: '--accent:' + accent },
+              el('span', { class: 'log-emoji', 'aria-hidden': 'true', text: u.emoji || '' }),
+              el(
+                'div',
+                {},
+                el('p', { class: 'log-date', text: 'Latest update · ' + (u.date || '') }),
+                el('h2', { text: u.title || 'Update' }),
+                el('p', {}, rich(u.summary || '')),
+                el('a', {
+                  href: 'changelog.html#update-' + updates.length,
+                  text: 'Read the full changelog →',
+                })
+              )
+            )
+          );
+        })
+        .catch(() => {});
     })();
   </script>
 </body>
-</html>
+  </html>

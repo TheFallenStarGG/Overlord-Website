@@ -2,7 +2,7 @@
 (function () {
   // The bot keeps these files up to date on the "data" branch of this repo
   const DATA_BASE = 'https://raw.githubusercontent.com/TheFallenStarGG/Overlord-Website/data/';
-  const INVITE = 'https://discord.com/api/oauth2/authorize?client_id=1555446743515144232&permissions=268438528&scope=bot%20applications.commands';
+  const INVITE = 'https://discord.com/api/oauth2/authorize?client_id=1555446743515144232&permissions=1099981778134&scope=bot%20applications.commands';
   const SUPPORT = 'https://discord.gg/vZrsPCMHys';
   const TOPGG = 'https://top.gg/bot/1555446743515144232';
   const TOPGG_VOTE = 'https://top.gg/bot/1555446743515144232/vote';

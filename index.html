@@ -32,72 +32,45 @@
   }
   </script>
   <style>
+    /* Home-only — do not override .eyebrow / .cta-row / .pill from styles.css */
     .home-hero .lead { max-width: 40rem; }
-    .pill-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0 0; }
-    .pill {
-      display: inline-flex; align-items: center;
-      padding: 0.35rem 0.75rem; border-radius: 999px;
-      background: rgba(224, 184, 74, 0.12);
-      border: 1px solid rgba(224, 184, 74, 0.35);
-      font-size: 0.85rem;
-    }
-    .home-cta {
-      display: flex; flex-wrap: wrap; align-items: center;
-      gap: 0.75rem 1.25rem; margin-top: 1.25rem;
-    }
-    .cta-links { font-size: 0.95rem; opacity: 0.92; }
-    .cta-sep { margin: 0 0.35rem; opacity: 0.5; }
-    .feature-grid {
-      list-style: none; padding: 0; margin: 1rem 0 0;
-      display: grid; gap: 1rem;
-      grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
-    }
-    .feature-card {
-      padding: 1rem 1.1rem; border-radius: 12px;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.08);
-    }
-    .feature-card h3 { margin: 0 0 0.4rem; font-size: 1.05rem; }
-    .feature-card p { margin: 0; opacity: 0.88; font-size: 0.95rem; line-height: 1.45; }
-    .steps { margin: 0.75rem 0 0; padding-left: 1.2rem; line-height: 1.55; }
-    .steps li { margin-bottom: 0.45rem; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.85rem 0 0; }
+    .cta-links { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem 0.5rem; font-size: 0.95rem; }
+    .cta-sep { opacity: 0.45; }
     .pulse-grid {
       display: grid; gap: 0.75rem; margin-top: 1rem;
-      grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+      grid-template-columns: repeat(2, 1fr);
+    }
+    @media (min-width: 640px) {
+      .pulse-grid { grid-template-columns: repeat(4, 1fr); }
     }
     .pulse-item {
-      padding: 0.75rem 0.9rem; border-radius: 10px;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.08);
+      padding: 0.75rem 0.9rem; border-radius: 12px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border, rgba(255,255,255,0.08));
     }
-    .pulse-k { display: block; font-size: 0.75rem; opacity: 0.65; margin-bottom: 0.25rem; }
+    .pulse-k { display: block; font-size: 0.7rem; opacity: 0.65; margin-bottom: 0.25rem; letter-spacing: 0.04em; text-transform: uppercase; }
     .pulse-aside {
       display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-start;
       margin-top: 1rem;
     }
-    .pulse-aside .topgg-widget { margin: 0; flex: 0 0 auto; }
+    .pulse-aside .topgg-widget { margin: 0; }
     .pulse-aside .topgg-widget img { display: block; border-radius: 10px; max-width: 280px; height: auto; }
-    .tile-grid {
-      list-style: none; padding: 0; margin: 1rem 0 0;
-      display: grid; gap: 0.75rem;
-      grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
-    }
   </style>
 </head>
 <body>
-  <!-- data.js injects header + footer (same as every other page) -->
   <script src="data.js"></script>
 
   <main class="wrap">
     <section class="card hero home-hero">
-      <p class="eyebrow">Discord bot · every command starts with <strong>!!</strong></p>
+      <p class="eyebrow">Discord bot · commands use !!</p>
       <h1>The Overlord</h1>
       <p class="lead">
         A shared realm for your server: earn and spend coins, trade the market, fight on a
         <strong>global Campaign map</strong>, read the daily <strong>Gazette</strong>,
         and give moderators tools that stay out of the way. Free to add.
       </p>
-      <div class="cta-row home-cta">
+      <div class="cta-row">
         <a class="btn" id="invite-btn" href="#">Add to Discord</a>
         <span class="cta-links">
           <a href="commands.html">Commands</a>
@@ -107,7 +80,7 @@
           <a href="https://top.gg/bot/1555446743515144232/vote" target="_blank" rel="noopener">Vote</a>
         </span>
       </div>
-            <div class="pill-row" aria-label="Highlights">
+      <div class="pill-row" aria-label="Highlights">
         <span class="pill">Economy &amp; jobs</span>
         <span class="pill">World Campaign</span>
         <span class="pill">Daily Gazette</span>
@@ -115,7 +88,7 @@
         <span class="pill">Moderation</span>
         <span class="pill">Raids &amp; events</span>
       </div>
-      <div class="stats" style="margin-top:1.25rem">
+      <div class="stats">
         <div class="stat"><b id="st-servers">—</b><span>Servers</span></div>
         <div class="stat"><b id="st-players">—</b><span>Tracked players</span></div>
         <div class="stat"><b id="st-commands">—</b><span>Commands</span></div>
@@ -162,18 +135,18 @@
 
     <section class="card">
       <h2 class="section-title">First five minutes</h2>
-      <ol class="steps">
-        <li>Add the bot (button above, or <code>!!invite</code> from a server that already has it).</li>
-        <li>Run <code>!!help</code> — that’s the table of contents.</li>
-        <li>Try <code>!!daily</code>, <code>!!work</code>, or <code>!!balance</code>.</li>
-        <li>Admins: <code>!!settings</code>, <code>!!events-channel</code>, <code>!!modhelp</code>.</li>
+      <ol class="feature-list" style="list-style: decimal; padding-left: 1.25rem; line-height: 1.55;">
+        <li style="margin-bottom:0.4rem">Add the bot (button above, or <code>!!invite</code> from a server that already has it).</li>
+        <li style="margin-bottom:0.4rem">Run <code>!!help</code> — that’s the table of contents.</li>
+        <li style="margin-bottom:0.4rem">Try <code>!!daily</code>, <code>!!work</code>, or <code>!!balance</code>.</li>
+        <li style="margin-bottom:0.4rem">Admins: <code>!!settings</code>, <code>!!events-channel</code>, <code>!!modhelp</code>.</li>
         <li>Optional: <a href="https://top.gg/bot/1555446743515144232/vote" target="_blank" rel="noopener">vote on top.gg</a>, then <code>!!vote</code>.</li>
       </ol>
     </section>
 
     <section class="card">
       <h2 class="section-title">Explore the site</h2>
-      <ul class="tile-grid" id="tiles"></ul>
+      <ul class="tiles" id="tiles"></ul>
     </section>
 
     <section class="card">
@@ -218,7 +191,8 @@
     (() => {
       const { fetchData, fmt, el, rich, botState, pages, INVITE } = Overlord;
       const $ = (id) => document.getElementById(id);
-            const invite = $('invite-btn');
+
+      const invite = $('invite-btn');
       if (invite && INVITE) invite.href = INVITE;
 
       const tileBox = $('tiles');

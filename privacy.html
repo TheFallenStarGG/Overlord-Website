@@ -4,14 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Privacy Policy — The Overlord Discord Bot</title>
-  <meta name="description" content="Privacy policy for The Overlord: what data the bot and website store, Discord OAuth, and how to opt out of public leaderboards." />
+  <meta name="description" content="Privacy policy for The Overlord: what data the bot and website store, including moderation records, the World Campaign and voting, Discord OAuth, and how to opt out of public leaderboards." />
   <link rel="canonical" href="https://thefallenstargg.github.io/Overlord-Website/privacy.html" />
   <meta name="theme-color" content="#e0b84a" />
   <link rel="stylesheet" href="styles.css" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="The Overlord" />
   <meta property="og:title" content="Privacy Policy — The Overlord Discord Bot" />
-  <meta property="og:description" content="Privacy policy for The Overlord: what data the bot and website store, Discord OAuth, and how to opt out of public leaderboards." />
+  <meta property="og:description" content="Privacy policy for The Overlord: what data the bot and website store, including moderation records, the World Campaign and voting." />
   <meta property="og:image" content="https://thefallenstargg.github.io/Overlord-Website/og-image.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
@@ -19,29 +19,13 @@
   <meta name="twitter:card" content="summary_large_image" />
 </head>
 <body>
-  <header class="site-header">
-    <div class="wrap">
-      <a class="brand" href="index.html">
-        <span class="brand-mark" aria-hidden="true">♛</span>
-        <span class="brand-text">The Overlord</span>
-      </a>
-      <nav>
-        <a href="index.html">Home</a>
-        <a href="changelog.html">Changelog</a>
-        <a href="leaderboards.html">Leaderboards</a>
-        <a href="terms.html">Terms</a>
-        <a class="active" href="privacy.html">Privacy</a>
-        <a href="https://github.com/TheFallenStarGG/OverLord-Bot" target="_blank" rel="noopener">GitHub</a>
-        <a class="btn" href="https://discord.com/api/oauth2/authorize?client_id=1555446743515144232&permissions=1099981778134&scope=bot%20applications.commands">Invite</a>
-      </nav>
-    </div>
-  </header>
+  <script src="data.js"></script>
 
   <main class="wrap">
     <article class="card">
 
       <h1>Privacy Policy</h1>
-      <p class="meta">Last updated: October 12, 2026</p>
+      <p class="meta">Last updated: October 29, 2026</p>
 
       <p>
         This Privacy Policy describes how <strong>The Overlord</strong> Discord bot (the “Bot”),
@@ -68,11 +52,11 @@
       <h2>1. Scope</h2>
       <p>This policy covers:</p>
       <ul>
-        <li>The Discord bot known as The Overlord and its command, event, and background systems</li>
-        <li>The public website (documentation, leaderboards, stocks pages, status, changelog, FAQ, about, terms, privacy, cookie notice)</li>
+        <li>The Discord bot known as The Overlord and its command, event, moderation, and background systems</li>
+        <li>The public website (documentation, leaderboards, stocks pages, campaign map, gazette, status, changelog, FAQ, about, terms, privacy, cookie notice)</li>
         <li>Discord OAuth login for the user dashboard and the allowlisted operator admin panel</li>
         <li>Optional bridges (for example a Cloudflare Worker or similar) used to complete login or serve API data for the dashboard</li>
-        <li>Published data files (for example JSON on GitHub) used to power public Site pages</li>
+        <li>Published data files (for example JSON and images on GitHub) used to power public Site pages</li>
       </ul>
       <p>It does not control Discord’s own processing, third-party invite links, or external sites you choose to open.</p>
 
@@ -85,6 +69,7 @@
         <li>Usernames, global names, nicknames, and avatar URLs as Discord exposes them to the Bot or OAuth</li>
         <li>Discord guild (server) IDs and names, channel IDs and names, role IDs and names needed for features</li>
         <li>Whether you are a bot or human account (to refuse invalid targets)</li>
+        <li>When your Discord account was created and when you joined a server, where moderation or anti-raid features use them</li>
         <li>Approximate permissions Discord reports for you in a guild (for example “Manage Guild”) when building the dashboard server list</li>
       </ul>
 
@@ -97,9 +82,17 @@
         <li>Optional report and feedback submissions you explicitly send to the Operator</li>
       </ul>
       <p>
-        The Bot requests Discord’s Message Content Intent where required for prefix commands.
+        The Bot requests Discord’s Message Content Intent where required for prefix commands and automod.
         The Bot is not designed to store the full chat history of ordinary non-command channels,
         but command usage and feature-specific messages may be processed and, where needed for the feature, stored.
+      </p>
+      <p>
+        <strong>Automod.</strong> If a server administrator turns automod on, the Bot reads the text of messages
+        in the channels it can see so it can check them against the rules that administrator chose (invites, links,
+        spam rate, capital letters, mass mentions, blocked words). Messages are checked as they arrive and are not
+        stored for that purpose. Short-lived counters (for example how many messages someone sent in the last few
+        seconds) may be kept in memory. A message that breaks a rule may be deleted, and, if the administrator chose
+        that option, a warning is recorded (see section 2.10).
       </p>
 
       <h3>2.3 Gameplay, economy, and progression data (primarily per server)</h3>
@@ -114,7 +107,7 @@
         <li>Stock portfolios, orders or positions as implemented, and server market state</li>
         <li>Lottery entries, duel/ranked records, war participation, tournament state</li>
         <li>Raid opt-outs, raid stats for the server, raid configuration (category, ping role, cooldowns)</li>
-        <li>Admin settings: event and level channels, gambling/rob toggles, disabled commands, ignored channels, game channels, reaction-role panels, custom title shop entries and linked Discord roles</li>
+        <li>Admin settings: command prefix, event and level channels, gambling/rob toggles, disabled commands, ignored channels, game channels, reaction-role panels, custom title shop entries and linked Discord roles</li>
         <li>Realm board channel configuration and related overview content</li>
       </ul>
 
@@ -122,7 +115,9 @@
       <ul>
         <li><strong>Raids:</strong> matching two guilds, creating temporary channels, relaying participant chat, scoring, and writing summary stats. Participants on either side may see display names and messages from the other side for the duration of the raid.</li>
         <li><strong>Global leaderboards</strong> and similar rankings may combine user IDs and display names across guilds.</li>
-        <li><strong>Website exports</strong> may publish ranked or aggregate statistics, listed servers, war outcomes, bot online status, command catalogs, changelog entries, and wiki-style reference data.</li>
+        <li><strong>World Campaign:</strong> each server that uses a campaign command becomes a “house” on one shared map. We store the server’s ID and name, a house color, score, treasury, troop and city ownership, fort levels, alliances, queued orders, the map channel and map message IDs, and a short event log. This data is shared across all servers, is <strong>not</strong> part of the per-server data wipe described in section 6, and is shown publicly: the server name and score appear on the Campaign page and on map images posted to other servers. Season resets clear the map but keep houses. Ask us (section 13) if you want your server’s house removed.</li>
+        <li><strong>Voting:</strong> if you use <code>!!vote</code> or vote on top.gg, we process your Discord user ID, when you last claimed a vote reward, and when your short earn boost ends. We check your vote with the top.gg API using your user ID.</li>
+        <li><strong>Website exports</strong> may publish ranked or aggregate statistics, listed servers, war outcomes, Campaign data and map images, Gazette editions, bot online status, command catalogs, changelog entries, and wiki-style reference data.</li>
       </ul>
 
       <h3>2.5 Website, cookies, and local storage</h3>
@@ -174,13 +169,38 @@
         <li>Advertising profiles for third-party ad networks on the Site (we do not run third-party ad trackers as part of the Bot’s design)</li>
       </ul>
 
+      <h3>2.10 Server moderation records</h3>
+      <p>
+        The Bot includes moderation tools that server staff can use (warnings, notes, mutes, kicks, bans, temporary
+        bans, softbans, purge, lock, slowmode, automod, anti-raid, welcome messages). When staff use them, or when
+        automod or anti-raid acts on a server’s behalf, we may store, <strong>for that server</strong>:
+      </p>
+      <ul>
+        <li>Case records: case number, action type, the affected user’s Discord ID, the moderator’s Discord ID, the reason text, the time, and an end time for timed actions</li>
+        <li>Private moderator notes and whether a warning was later removed</li>
+        <li>Timers for temporary bans so the ban can be lifted automatically</li>
+        <li>The server’s moderation settings: mod log channel, moderator roles, DM setting, automatic action rules, automod rules (including blocked words, allowed domains, and ignored channels and roles), anti-raid settings, and the welcome message text and channel</li>
+      </ul>
+      <p>
+        The Bot may also send a direct message to the affected person (warn, mute, kick, ban, tempban, softban)
+        unless the server turned that off, post an entry in the server’s mod log channel, and write a reason to
+        Discord’s audit log that may include the moderator’s name. Anti-raid reads join events, the account creation
+        date and the join time to spot spikes and very new accounts, and can kick, ban or time out members when
+        the rules the server chose are met.
+      </p>
+      <p>
+        Moderation records are visible to that server’s staff through Bot commands and are <strong>not</strong>
+        published on the Site. Server staff decide what to record and whom to act on; the Operator processes this
+        data only to provide the tools. If you think a moderation action was wrong, contact that server’s staff.
+      </p>
+
       <h2>3. How we use information</h2>
       <ul>
-        <li>To operate Bot features you or server admins request (economy, games, raids, stocks, settings, and the rest of the command set)</li>
+        <li>To operate Bot features you or server admins request (economy, games, raids, stocks, moderation, the World Campaign, settings, and the rest of the command set)</li>
         <li>To keep per-server progress consistent across sessions and host restarts</li>
         <li>To run matchmaking and safety rules for raids and PvP</li>
         <li>To provide the Site, dashboard, and allowlisted admin panel</li>
-        <li>To publish optional public data exports for leaderboards and status pages</li>
+        <li>To publish optional public data exports for leaderboards, the Campaign map and status pages</li>
         <li>To investigate abuse, spam, exploits, and security incidents</li>
         <li>To improve reliability (debugging, soft-fail load logs, uptime)</li>
         <li>To comply with law and enforceable legal requests</li>
@@ -193,7 +213,7 @@
       <h2>4. Legal bases (where GDPR / UK GDPR applies)</h2>
       <ul>
         <li><strong>Contract / requested service:</strong> providing the Bot and Site features you choose to use</li>
-        <li><strong>Legitimate interests:</strong> securing the Service, preventing abuse, operating multiplayer features, maintaining public game leaderboards that are part of the product</li>
+        <li><strong>Legitimate interests:</strong> securing the Service, preventing abuse, operating multiplayer features, maintaining public game leaderboards that are part of the product, and providing moderation tools that server staff configure</li>
         <li><strong>Consent:</strong> where required for non-essential browser storage, or for optional AI features, as applicable</li>
         <li><strong>Legal obligation:</strong> when we must retain or disclose information under law</li>
       </ul>
@@ -206,7 +226,8 @@
         <li><strong>Turso or other libSQL/SQL hosts</strong> — persistent economy and settings storage</li>
         <li><strong>Cloudflare</strong> (or similar) — Workers/KV for OAuth callbacks or API if configured</li>
         <li><strong>OpenRouter or other AI APIs</strong> — only when AI features are used</li>
-        <li><strong>GitHub / GitHub Pages</strong> — Site hosting and optional public JSON data hosting</li>
+        <li><strong>top.gg</strong> — vote checks and vote notifications for the vote reward</li>
+        <li><strong>GitHub / GitHub Pages</strong> — Site hosting and optional public JSON and image data hosting</li>
       </ul>
       <p>
         These providers may store or process data in the United States or other countries.
@@ -215,10 +236,11 @@
 
       <h2>6. Retention and deletion</h2>
       <ul>
-        <li><strong>Active servers:</strong> gameplay and settings remain while the Bot is used in that guild, until changed or deleted.</li>
-        <li><strong>Bot removed from a guild:</strong> we schedule deletion of that guild’s stored Bot data after approximately <strong>30 days</strong>, unless we must keep data longer for security, abuse, dispute, or legal reasons.</li>
+        <li><strong>Active servers:</strong> gameplay, moderation records and settings remain while the Bot is used in that guild, until changed or deleted.</li>
+        <li><strong>Bot removed from a guild:</strong> we schedule deletion of that guild’s stored Bot data (including its moderation records) after approximately <strong>30 days</strong>, unless we must keep data longer for security, abuse, dispute, or legal reasons.</li>
         <li><strong>Admin wipe:</strong> users with the required permissions can run the Bot’s data-deletion command to wipe <strong>that server’s</strong> Bot data after confirmation.</li>
         <li><strong>Raid channels:</strong> temporary; deleted after the raid ends. Summary statistics may remain in guild records.</li>
+        <li><strong>World Campaign and vote data:</strong> kept globally (not per server) until the Operator resets or removes it. Ask us to remove your server’s house or your vote records.</li>
         <li><strong>OAuth sessions:</strong> until logout, expiry, or clearing site data.</li>
         <li><strong>Cookie notice choice:</strong> until you clear storage.</li>
         <li><strong>Blacklist / blocks:</strong> until the Operator removes them.</li>
@@ -226,16 +248,17 @@
         <li><strong>Logs:</strong> retained only as long as reasonably useful for operations and security.</li>
       </ul>
       <p>
-        Deleting a single server’s data does not always remove global leaderboard rows, operator
-        blacklists, or copies already published to public website data files until those systems
+        Deleting a single server’s data does not always remove global leaderboard rows, World Campaign data,
+        operator blacklists, or copies already published to public website data files until those systems
         are updated or regenerated.
       </p>
 
       <h2>7. Sharing and visibility</h2>
       <ul>
-        <li><strong>Other Discord users</strong> can see normal Bot output in channels they can view, including raid relay text during a raid.</li>
+        <li><strong>Other Discord users</strong> can see normal Bot output in channels they can view, including raid relay text during a raid, and moderation messages the server staff choose to post.</li>
+        <li><strong>Server staff</strong> can see moderation records for their own server through Bot commands and the mod log channel they choose.</li>
         <li><strong>Service providers</strong> process data only to host or operate the Service.</li>
-        <li><strong>Public website visitors</strong> can see information included in published exports (leaderboards, listed servers, status, and similar).</li>
+        <li><strong>Public website visitors</strong> can see information included in published exports (leaderboards, listed servers, Campaign map and houses, Gazette editions, status, and similar).</li>
         <li><strong>Legal and safety:</strong> we may disclose information if required by law or to protect people, the Service, or rights.</li>
         <li><strong>Project transfer:</strong> if the Operator transfers the project, data may transfer under continued protection commitments.</li>
       </ul>
@@ -243,11 +266,11 @@
       <h2>8. Your choices and rights</h2>
       <ul>
         <li>Control Discord permissions and which channels the Bot can read.</li>
-        <li>Server admins: configure features; run data deletion for that guild when available.</li>
+        <li>Server admins: configure features (including turning automod, anti-raid and welcome messages off); run data deletion for that guild when available.</li>
         <li>Raid participants: use the Bot’s raid opt-out command.</li>
         <li>Website users: use the cookie banner choices; clear site data; log out of the dashboard.</li>
         <li>Leaderboard visibility: use any in-Bot opt-out (for example web-hide style commands) where offered.</li>
-        <li>Contact the Operator (section 13) to request access, correction, or deletion of personal data we hold, subject to technical limits (we cannot change Discord’s own databases) and legal exceptions.</li>
+        <li>Contact the Operator (section 13) to request access, correction, or deletion of personal data we hold, subject to technical limits (we cannot change Discord’s own databases) and legal exceptions. For moderation records, we may need to involve the server’s staff.</li>
       </ul>
       <p>
         If you are in the EEA or UK, you may have rights of access, rectification, erasure, restriction,
@@ -276,6 +299,12 @@
         Game systems use automated rules (random rolls, matchmaking, cooldowns, anti-abuse checks).
         These decisions affect virtual gameplay only, not legal or similarly significant real-world rights.
       </p>
+      <p>
+        Automod and anti-raid are different: when a server administrator turns them on, they can automatically
+        delete messages, warn, time out, kick or ban accounts on that server according to the administrator’s
+        settings. They can make mistakes. The server’s staff, not the Operator, decide these settings and handle
+        appeals; you can ask them to review an action.
+      </p>
 
       <h2>12. Changes to this policy</h2>
       <p>
@@ -298,17 +327,5 @@
 
     </article>
   </main>
-
-  <footer class="site-footer">
-    <div class="wrap">
-      <p>
-        © 2026 The Overlord ·
-        <a href="terms.html">Terms</a> ·
-        <a href="privacy.html">Privacy</a> ·
-        Not affiliated with Discord Inc.
-      </p>
-    </div>
-  </footer>
-  <script src="data.js"></script>
 </body>
-  </html>
+</html>

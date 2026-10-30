@@ -3,11 +3,17 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>World Campaign — Global Conquest Map</title>
-  <meta name="description" content="Live global campaign for The Overlord." />
+  <title>World Campaign — Global Conquest Map | The Overlord</title>
+  <meta name="description" content="The live World Campaign for The Overlord Discord bot: one shared map where every server is a house. See the map, house rankings, every province and city, and the latest battles." />
   <link rel="canonical" href="https://thefallenstargg.github.io/Overlord-Website/campaign.html" />
   <meta name="theme-color" content="#e0b84a" />
   <link rel="stylesheet" href="styles.css" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="The Overlord" />
+  <meta property="og:title" content="World Campaign — Global Conquest Map | The Overlord" />
+  <meta property="og:description" content="One shared map where every Discord server is a house. Live map, rankings and battles." />
+  <meta property="og:image" content="https://thefallenstargg.github.io/Overlord-Website/og-image.png" />
+  <meta property="og:url" content="https://thefallenstargg.github.io/Overlord-Website/campaign.html" />
   <style>
     .camp-map { width: 100%; height: auto; border-radius: 12px; background: #1a1520; display: block; }
     .camp-row {
@@ -18,6 +24,14 @@
     .camp-row strong { flex: 0 0 auto; }
     .camp-row .meta { flex: 1 1 auto; opacity: 0.75; font-size: 0.9em; }
     .camp-note { opacity: 0.7; font-size: 0.9em; margin: 0.5rem 0 0; }
+    .camp-prov { padding: 0.75rem 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .camp-prov:last-child { border-bottom: 0; }
+    .camp-prov > summary { cursor: pointer; display: flex; flex-wrap: wrap; gap: 0.35rem 0.75rem; align-items: baseline; }
+    .camp-prov > summary strong { flex: 0 0 auto; }
+    .camp-prov > summary .meta { flex: 1 1 auto; opacity: 0.75; font-size: 0.9em; }
+    .camp-cities { margin: 0.5rem 0 0; padding-left: 1.1rem; }
+    .camp-cities li { margin: 0.3rem 0; font-size: 0.92em; }
+    .camp-dot { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 50%; margin-right: 0.4rem; vertical-align: middle; background: #6b8cae; }
   </style>
 </head>
 <body>
@@ -26,29 +40,30 @@
     <section class="card hero compact">
       <p class="eyebrow">Global realm</p>
       <h1>Campaign</h1>
-      <p class="lead">One shared map. Each server is a house. Fight for the same provinces.</p>
+      <p class="lead">One shared map. Each server is a house. Fight for the same provinces. New here? Run <code>!!guide</code> in Discord.</p>
       <div class="stats">
         <div class="stat"><b id="c-status">—</b><span>Status</span></div>
         <div class="stat"><b id="c-turn">—</b><span>Turn</span></div>
         <div class="stat"><b id="c-houses">—</b><span>Houses</span></div>
-        <div class="stat"><b id="c-land">—</b><span>Held</span></div>
+        <div class="stat"><b id="c-land">—</b><span>Provinces held</span></div>
       </div>
     </section>
     <div id="content"><div class="skeleton block"></div></div>
   </main>
   <script>
     (async () => {
-      const { fetchData, el, timeAgo, fmt, DATA_BASE } = Overlord;
+      const { fetchData, el, timeAgo, fmt } = Overlord;
       const $ = (id) => document.getElementById(id);
+      const safeColor = (c) => (/^#[0-9a-f]{6}$/i.test(c || '') ? c : '#6b8cae');
 
       try {
         const c = await fetchData('campaign.json');
-        const held = (c.provinces || []).filter((p) => p.ownerId).length;
-        const total = (c.provinces || []).length;
+        const provinces = c.provinces || [];
+        const held = provinces.filter((p) => p.ownerId).length;
         $('c-status').textContent = !c.active ? 'Off' : c.paused ? 'Paused' : 'Active';
         $('c-turn').textContent = String(c.turn ?? 0);
-        $('c-houses').textContent = fmt(c.houseCount || 0);
-        $('c-land').textContent = held + '/' + total;
+        $('c-houses').textContent = fmt(c.houseCount || (c.houses || []).length || 0);
+        $('c-land').textContent = held + '/' + provinces.length;
 
         const out = [];
 
@@ -69,48 +84,74 @@
         mapCard.append(img);
         out.push(mapCard);
 
+        // Season
+        const season = c.seasonNumber != null ? 'Season ' + c.seasonNumber : 'Season ' + (c.seasonKey || '—');
+        const cityLine = c.totalCities != null ? ' · Cities claimed: ' + (c.claimedCities ?? 0) + '/' + c.totalCities : '';
         out.push(el('section', { class: 'card' },
           el('h2', { text: 'Season' }),
           el('p', {
             class: 'camp-note',
             text:
-              'Season ' + (c.seasonKey || '—') +
+              season + ' · Turn ' + (c.turn ?? 0) +
               ' · Next resolve: ' + (c.nextTickAt ? new Date(c.nextTickAt).toUTCString() : '—') +
-              (c.full ? ' · Map FULL' : ' · Neutral: ' + (c.neutral ?? '—')),
-          })
+              (c.full ? ' · Map FULL' : ' · Neutral provinces: ' + (c.neutral ?? '—')) + cityLine,
+          }),
+          el('p', { class: 'camp-note', text: 'The map resets every month and the top 3 houses win treasury prizes. Own every city in a province to control it.' })
         ));
 
+        // Houses
         const houseBox = el('section', { class: 'card' }, el('h2', { text: 'Houses' }));
         if (!(c.houses || []).length) {
           houseBox.append(el('p', { class: 'camp-note', text: 'No houses yet.' }));
         } else {
           for (const [i, h] of c.houses.entries()) {
+            const cities = h.cityCount != null ? ' · ' + h.cityCount + ' cities' : '';
             houseBox.append(
               el('div', { class: 'camp-row' },
-                el('strong', { text: (i + 1) + '. ' + h.name }),
-                el('span', { class: 'meta', text: (h.provinceCount || 0) + ' provinces · ' + fmt(h.score || 0) + ' pts' })
+                el('strong', null,
+                  el('span', { class: 'camp-dot', style: 'background:' + safeColor(h.color), 'aria-hidden': 'true' }),
+                  (i + 1) + '. ' + h.name + (h.ai ? ' (AI)' : '')),
+                el('span', { class: 'meta', text: (h.provinceCount || 0) + ' provinces' + cities + ' · ' + fmt(h.score || 0) + ' pts' })
               )
             );
           }
         }
         out.push(houseBox);
 
+        // Provinces (open one to see its cities)
         const provBox = el('section', { class: 'card' }, el('h2', { text: 'Provinces' }));
-        for (const p of c.provinces || []) {
+        provBox.append(el('p', { class: 'camp-note', text: 'Tap a province to see its cities.' }));
+        for (const p of provinces) {
           let line = 'Neutral';
           if (p.ownerName) {
             const troops = (p.armies || []).map((a) => a.size + ' (' + a.houseName + ')').join(', ');
             line = 'Held by ' + p.ownerName + (troops ? ' · ' + troops : '');
+          } else if ((p.cities || []).some((x) => x.ownerId)) {
+            line = 'Contested';
           }
-          provBox.append(
-            el('div', { class: 'camp-row' },
+          const details = el('details', { class: 'camp-prov' },
+            el('summary', null,
               el('strong', { text: p.name }),
               el('span', { class: 'meta', text: line })
             )
           );
+          const ul = el('ul', { class: 'camp-cities' });
+          for (const city of p.cities || []) {
+            const owner = city.ownerName ? 'held by ' + city.ownerName : 'neutral';
+            const troops = (city.troops || []).map((t) => t.size + ' ' + t.houseName).join(', ');
+            const extra = [
+              city.tax != null ? 'tax ' + city.tax : null,
+              city.fort ? 'fort ' + city.fort : null,
+              troops ? 'troops: ' + troops : null,
+            ].filter(Boolean).join(' · ');
+            ul.append(el('li', { text: city.name + ': ' + owner + (extra ? ' · ' + extra : '') }));
+          }
+          if (ul.children.length) details.append(ul);
+          provBox.append(details);
         }
         out.push(provBox);
 
+        // Log
         if ((c.log || []).length) {
           const logBox = el('section', { class: 'card' }, el('h2', { text: 'Recent log' }));
           for (const e of c.log) {
@@ -121,7 +162,7 @@
           out.push(logBox);
         }
 
-        out.push(el('p', { class: 'camp-note', text: 'Data ' + timeAgo(c.generatedAt) + ' · Discord: !!campaign' }));
+        out.push(el('p', { class: 'camp-note', text: 'Data ' + timeAgo(c.generatedAt) + ' · In Discord: !!guide to learn, !!map to play' }));
         $('content').replaceChildren(...out);
       } catch {
         $('content').replaceChildren(el('div', { class: 'card' },

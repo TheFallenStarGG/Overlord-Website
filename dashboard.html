@@ -5,77 +5,161 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Dashboard — The Overlord</title>
   <meta name="robots" content="noindex, nofollow" />
-  <meta name="description" content="Log in with Discord to see your stats in every server and manage the servers you run." />
+  <meta name="description" content="Log in with Discord to see your stats and manage the servers you moderate." />
   <meta name="theme-color" content="#e0b84a" />
   <link rel="stylesheet" href="styles.css" />
   <style>
-    .sub { margin: 1.2rem 0 0.4rem; font-size: 0.8rem; letter-spacing: 0.07em; text-transform: uppercase; color: var(--gold); }
-    .field { display: grid; gap: 0.35rem; margin: 0.7rem 0; font-weight: 650; color: var(--muted); }
+    .dash-wrap { width: min(1280px, 100% - 1.25rem); }
+
+    /* ---------- Shell: sidebar + content ---------- */
+    .shell { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
+    @media (min-width: 900px) { .shell { grid-template-columns: 16rem minmax(0, 1fr); gap: 1.5rem; align-items: start; } }
+
+    .side { padding: 0.9rem; background: var(--card); border: 1px solid var(--border); border-radius: 14px; }
+    @media (min-width: 900px) {
+      .side { position: sticky; top: calc(var(--header-h) + env(safe-area-inset-top, 0px) + 1rem); max-height: calc(100dvh - var(--header-h) - 2rem); overflow-y: auto; }
+      .mbar, .scrim { display: none !important; }
+    }
+    @media (max-width: 899px) {
+      .side { position: fixed; z-index: 80; top: 0; bottom: 0; left: 0; width: min(20rem, 86vw); padding: calc(1rem + env(safe-area-inset-top, 0px)) 1rem 1rem; overflow-y: auto; background: #0c0a13; border-radius: 0; border-width: 0 1px 0 0; border-color: var(--border-strong); transform: translateX(-105%); transition: transform 0.2s ease; }
+      .side.open { transform: none; }
+      .scrim { position: fixed; inset: 0; z-index: 70; background: rgba(0, 0, 0, 0.6); }
+    }
+    .mbar { position: sticky; top: calc(var(--header-h) + env(safe-area-inset-top, 0px)); z-index: 40; display: flex; align-items: center; gap: 0.6rem; padding: 0.55rem 0.1rem; margin-bottom: 0.5rem; background: rgba(10, 8, 16, 0.94); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); }
+    .mbar button { flex: 1; display: flex; align-items: center; gap: 0.6rem; min-width: 0; min-height: 2.75rem; padding: 0.4rem 0.8rem; font: inherit; font-weight: 700; color: var(--text); text-align: left; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-strong); border-radius: 12px; cursor: pointer; }
+    .mbar button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .ng { margin: 1rem 0 0.3rem; padding: 0 0.5rem; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); }
+    .ni { display: flex; align-items: center; gap: 0.6rem; width: 100%; min-height: 2.6rem; padding: 0.4rem 0.65rem; font: inherit; font-weight: 600; font-size: 0.94rem; color: var(--muted); text-align: left; background: none; border: 0; border-radius: 10px; cursor: pointer; }
+    .ni:hover { color: var(--text); background: rgba(255, 255, 255, 0.05); }
+    .ni[aria-current="page"] { color: var(--gold); background: var(--gold-soft); box-shadow: inset 3px 0 0 var(--gold); }
+    .ni b { width: 1.4rem; text-align: center; font-weight: 400; }
+    .side .select { width: 100%; }
+
+    .main { min-width: 0; }
+    .pane-head { margin: 0.2rem 0 1rem; }
+    .pane-head h1 { margin: 0; font-size: 1.5rem; line-height: 1.2; color: var(--gold); }
+    .pane-head p { margin: 0.25rem 0 0; color: var(--muted); font-size: 0.95rem; }
+    .pc { min-width: 0; }
+    .grid2 { display: grid; gap: 0.7rem; grid-template-columns: 1fr; }
+    @media (min-width: 640px) { .grid2 { grid-template-columns: 1fr 1fr; } }
+    .cols { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); align-items: start; }
+    @media (min-width: 1100px) { .cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+
+    /* ---------- Forms ---------- */
+    .field { display: grid; gap: 0.3rem; margin: 0.7rem 0; min-width: 0; }
+    .lab { font-weight: 650; color: var(--muted); font-size: 0.93rem; }
+    .hint { font-size: 0.84rem; color: var(--faint); font-weight: 400; }
+    .in { width: 100%; min-width: 0; min-height: 2.75rem; padding: 0.55rem 0.85rem; font: inherit; font-size: 1rem; color: var(--text); background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-strong); border-radius: 12px; }
+    .in:focus { outline: none; border-color: var(--gold); }
+    textarea.in { min-height: 6rem; resize: vertical; }
+    .in.sm, .select.sm { width: 6rem; flex: none; }
     .btn-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.8rem; }
-    .switch-row { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; padding: 0.6rem 0; border-bottom: 1px solid var(--border); cursor: pointer; }
-    .switch-row:last-child { border-bottom: 0; }
-    .switch-row > div, .switch-row > span { min-width: 0; overflow-wrap: anywhere; }
-    input[type="checkbox"] { flex: none; width: 1.4rem; height: 1.4rem; accent-color: var(--gold); }
-    .scroll { max-height: 18rem; overflow-y: auto; padding: 0 0.8rem; margin: 0.5rem 0; background: rgba(0, 0, 0, 0.25); border: 1px solid var(--border); border-radius: 12px; }
-    .pick { display: grid; gap: 0.5rem; margin: 0.6rem 0; }
+    .btn-danger { background: linear-gradient(135deg, #fca5a5, #f87171 45%, #c44536); }
+    .sub { margin: 1.2rem 0 0.4rem; font-size: 0.8rem; letter-spacing: 0.07em; text-transform: uppercase; color: var(--gold); }
+    .addrow { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+    .dur { display: flex; gap: 0.5rem; min-width: 0; }
+    .dur .in { width: 6rem; flex: none; } .dur .select { flex: 1; }
+
+    .trow { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.7rem 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+    .trow:last-child { border-bottom: 0; }
+    .trow > div { min-width: 0; overflow-wrap: anywhere; }
+    .sw { position: relative; flex: none; width: 2.8rem; height: 1.6rem; }
+    .sw input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; z-index: 1; }
+    .sw i { position: absolute; inset: 0; background: rgba(255, 255, 255, 0.14); border-radius: 999px; transition: background 0.15s; }
+    .sw i::after { content: ""; position: absolute; top: 0.2rem; left: 0.2rem; width: 1.2rem; height: 1.2rem; background: #fff; border-radius: 50%; transition: transform 0.15s; }
+    .sw input:checked + i { background: var(--gold); }
+    .sw input:checked + i::after { transform: translateX(1.2rem); background: #1a1205; }
+    .sw input:disabled + i { opacity: 0.4; }
+    .subin { margin: 0 0 0.4rem; padding: 0.2rem 0 0.4rem 0.9rem; border-left: 2px solid var(--border-strong); }
+
+    .scroll { max-height: 17rem; overflow-y: auto; padding: 0 0.8rem; margin: 0.5rem 0; background: rgba(0, 0, 0, 0.25); border: 1px solid var(--border); border-radius: 12px; }
+    .scroll .trow { padding: 0.55rem 0; }
+    .tags { display: flex; flex-wrap: wrap; gap: 0.4rem; min-height: 1.6rem; }
+    .tag { display: inline-flex; align-items: center; gap: 0.3rem; max-width: 100%; padding: 0.2rem 0.3rem 0.2rem 0.7rem; font-size: 0.88rem; overflow-wrap: anywhere; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-strong); border-radius: 999px; }
+    .tag button { width: 1.5rem; height: 1.5rem; padding: 0; font: inherit; line-height: 1; color: var(--muted); background: rgba(255, 255, 255, 0.08); border: 0; border-radius: 50%; cursor: pointer; }
+    .rules { display: grid; gap: 0.5rem; margin: 0.5rem 0; }
+    .rule { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; padding: 0.6rem 0.7rem; background: rgba(0, 0, 0, 0.28); border: 1px solid var(--border); border-radius: 12px; }
+    .rule .dur { flex: 1 1 14rem; }
+
+    .savebar { position: sticky; bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px)); z-index: 50; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.6rem; padding: 0.6rem 0.8rem; margin-top: 1rem; background: rgba(18, 14, 26, 0.97); border: 1px solid var(--gold); border-radius: 14px; box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55); }
+    .savebar span { font-weight: 650; color: var(--gold); }
+    .savebar .btn-row { margin: 0; }
+
+    /* ---------- Lists ---------- */
     .srvhead { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.4rem; }
     .srvhead strong { overflow-wrap: anywhere; }
     .bar { height: 0.55rem; margin: 0.6rem 0 0.2rem; overflow: hidden; background: rgba(255, 255, 255, 0.08); border-radius: 999px; }
     .bar > span { display: block; height: 100%; background: linear-gradient(90deg, var(--violet), var(--gold)); }
+    .stats-grid { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
+    @media (min-width: 1100px) { .stats-grid { grid-template-columns: 1fr 1fr; } }
+
+    .li { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; padding: 0.65rem 0; border-bottom: 1px solid var(--border); }
+    .li:last-child { border-bottom: 0; }
+    .li > div:first-child { min-width: 0; overflow-wrap: anywhere; }
+    .li .btn-row { margin: 0; flex: none; }
+    .pickrow { display: flex; align-items: center; gap: 0.7rem; width: 100%; padding: 0.55rem 0.7rem; font: inherit; color: var(--text); text-align: left; background: transparent; border: 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+    .pickrow:hover { background: rgba(255, 255, 255, 0.05); }
+    .pickrow[aria-pressed="true"] { background: rgba(224, 184, 74, 0.16); box-shadow: inset 3px 0 0 var(--gold); }
+    .pickrow small { display: block; color: var(--faint); }
+    .results { margin: 0.5rem 0; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; max-height: 20rem; overflow-y: auto; }
+    .results:empty { display: none; }
+    .mav { flex: none; width: 2.4rem; height: 2.4rem; background: rgba(0, 0, 0, 0.4); border-radius: 50%; object-fit: cover; }
+    .mhead { display: flex; align-items: center; gap: 0.8rem; }
+    .mhead .mav { width: 3.2rem; height: 3.2rem; }
+    .acts { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.4rem 0 0.8rem; }
+
+    .case { margin: 0.5rem 0; padding: 0.7rem 0.85rem; background: rgba(0, 0, 0, 0.28); border: 1px solid var(--border); border-left: 4px solid var(--accent, var(--gold)); border-radius: 12px; }
+    .case.t-ban, .case.t-tempban { --accent: var(--red); }
+    .case.t-warn { --accent: var(--amber); }
+    .case.t-unban, .case.t-unmute { --accent: var(--green); }
+    .case.t-note { --accent: #8b94a3; }
+    .case.gone { opacity: 0.55; }
+    .case-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.2rem 0.7rem; }
+    .case p { margin: 0.3rem 0 0; color: var(--muted); font-size: 0.93rem; overflow-wrap: anywhere; white-space: pre-wrap; }
+    .case small { color: var(--faint); }
+    .case .btn-row { margin-top: 0.5rem; }
     .admin-frame { display: block; width: 100%; height: 70vh; border: 0; background: transparent; }
-    .field {
-      display: grid;
-      gap: 0.35rem;
-      margin: 0.7rem 0;
-      font-weight: 650;
-      color: var(--muted);
-      min-width: 0;
-      max-width: 100%;
-    }
-    .field .select {
-      width: 100%;
-      max-width: 100%;
-      min-width: 0;
-      box-sizing: border-box;
-    }
   </style>
 </head>
 <body>
   <script src="data.js"></script>
 
-  <main class="wrap">
-    <section class="card hero compact">
+  <main class="wrap dash-wrap">
+    <section class="card hero compact" id="hero">
       <p class="eyebrow">Your dashboard</p>
       <h1>Dashboard</h1>
-      <p class="lead">Log in with Discord to see your stats in every server, and manage the servers you run.</p>
+      <p class="lead">Log in with Discord to see your stats and manage the servers you moderate.</p>
       <div class="cta-row">
         <button type="button" class="btn btn-lg" id="login">Log in with Discord</button>
-        <button type="button" class="btn btn-secondary" id="logout" hidden>Log out</button>
       </div>
       <p class="meta" id="status">Not logged in.</p>
-      <p class="note" id="scope-note">Logging in lets this site read your Discord username and the list of servers you're in, including whether you manage them. It can't read your messages or email, and it never posts for you.</p>
+      <p class="note" id="scope-note">Logging in lets this site read your Discord username and the list of servers you're in, including what you can do there. It can't read your messages or email, and it never posts for you.</p>
     </section>
 
     <div id="panel" hidden>
-      <div class="tabs" id="tabs" role="tablist"></div>
-
-      <section id="tab-stats">
-        <div id="stats-list"></div>
-      </section>
-
-      <section id="tab-settings" hidden>
-        <div class="card">
-          <h2 class="section-title">Server settings</h2>
-          <p class="section-sub">Toggles, channels, commands, shop titles and role panels. You only see servers where you have Manage Server. Moderation (<code>!!modhelp</code>), automod, anti-raid, welcome messages and the prefix are set in Discord for now.</p>
-          <label class="field">Server <select class="select" id="set-guild"></select></label>
-          <p class="meta" id="set-msg"></p>
+      <div class="mbar"><button type="button" id="menu-btn"><b>☰</b><span id="mbar-title">Menu</span></button></div>
+      <div class="scrim" id="scrim" hidden></div>
+      <div class="shell">
+        <aside class="side" id="side">
+          <label class="lab" for="guild-pick" style="display:block;margin:0 0 0.3rem">Server</label>
+          <select class="select" id="guild-pick"></select>
+          <nav id="nav"></nav>
+          <div class="btn-row"><button type="button" class="btn btn-sm btn-secondary" id="logout">Log out</button></div>
+          <p class="hint" id="who" style="margin:0.6rem 0 0"></p>
+        </aside>
+        <div class="main">
+          <div class="pane-head" id="pane-head"></div>
+          <div id="pane"></div>
+          <div class="savebar" id="savebar" hidden>
+            <span>● Unsaved changes</span>
+            <div class="btn-row">
+              <button type="button" class="btn btn-sm btn-secondary" id="discard">Discard</button>
+              <button type="button" class="btn btn-sm" id="save">Save changes</button>
+            </div>
+          </div>
         </div>
-        <div id="set-body"></div>
-      </section>
-
-      <section id="tab-admin" hidden>
-        <iframe id="admin-frame" class="admin-frame" title="Admin panel" scrolling="no"></iframe>
-      </section>
+      </div>
     </div>
   </main>
 
@@ -85,6 +169,7 @@
     // *** YOUR WORKER URL — no trailing slash ***
     const API = "https://overlord-api.darkstargaming23266.workers.dev";
     const TOKEN_KEY = "overlord_admin_token"; // same key as the admin page, so one login covers both
+    const GUILD_KEY = "overlord_dash_guild";
 
     const $ = (id) => document.getElementById(id);
 
@@ -102,29 +187,29 @@
       }
       return e;
     }
-    function clear(node) {
-      while (node.firstChild) node.removeChild(node.firstChild);
-      return node;
-    }
+    function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); return node; }
     const pill = (text, kind) => h("span", { class: "pill " + (kind || "") }, text);
     const fmtNum = (n) => Number(n || 0).toLocaleString("en-US");
     const stat = (label, value) => h("div", { class: "stat" }, h("b", null, String(value)), h("span", null, label));
+    const ago = (t) => {
+      const s = Math.max(0, (Date.now() - t) / 1000);
+      if (s < 60) return "just now";
+      const m = s / 60; if (m < 60) return Math.floor(m) + "m ago";
+      const hr = m / 60; if (hr < 48) return Math.floor(hr) + "h ago";
+      return Math.floor(hr / 24) + "d ago";
+    };
     let toastTimer;
     function toast(msg) {
       const t = $("toast");
       t.textContent = msg;
       t.classList.add("show");
       clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => t.classList.remove("show"), 4000);
+      toastTimer = setTimeout(() => t.classList.remove("show"), 4500);
     }
 
     // ---------- Session + API ----------
-
     const getToken = () => localStorage.getItem(TOKEN_KEY) || "";
-    function setToken(t) {
-      if (t) localStorage.setItem(TOKEN_KEY, t);
-      else localStorage.removeItem(TOKEN_KEY);
-    }
+    function setToken(t) { if (t) localStorage.setItem(TOKEN_KEY, t); else localStorage.removeItem(TOKEN_KEY); }
     if (location.hash.startsWith("#token=")) {
       setToken(decodeURIComponent(location.hash.slice(7)));
       history.replaceState(null, "", location.pathname);
@@ -140,499 +225,813 @@
       if (!res.ok) throw new Error(data.error || res.statusText);
       return data;
     }
-
     $("login").onclick = () => { location.href = API + "/auth/login"; };
     $("logout").onclick = () => { setToken(""); location.href = "dashboard.html"; };
 
-    let me = null;
-    let servers = [];
-    let TABS = [];
-    let current = "stats";
-    let loadedGuild = null;
+    // ---------- State ----------
+    let me = null, servers = [], G = null, current = "stats";
+    let dirty = false, saver = null;
+    const NAMES = {}; // user id -> name (filled from the cases endpoint)
 
-    // ---------- Tabs ----------
-
-    function buildTabs() {
-      const box = clear($("tabs"));
-      for (const [id, label] of TABS) {
-        box.appendChild(h("button", { type: "button", class: "tab", role: "tab", "aria-selected": String(id === current), onclick: () => showTab(id) }, label));
-      }
-    }
-    function showTab(id) {
-      current = id;
-      buildTabs();
-      for (const [tid] of TABS) $("tab-" + tid).hidden = tid !== id;
-      if (id === "settings") initSettingsTab();
-      if (id === "admin") openAdmin();
-    }
-
-    // ---------- My stats ----------
-
-    // Keep in sync with CAREERS in lib/economy.js
-    const CAREERS = [["Intern", "📎", 0], ["Barista", "☕", 25], ["Technician", "🔧", 75], ["Manager", "📋", 200], ["Director", "💼", 500], ["CEO", "👑", 1000]];
-    function careerOf(works) {
-      let c = CAREERS[0];
-      for (const x of CAREERS) if (works >= x[2]) c = x;
-      return c;
-    }
-
-    function noteCard(title, text, button) {
-      return h("div", { class: "card" }, h("h2", { class: "section-title" }, title), h("p", { class: "meta" }, text), button ? h("div", { class: "btn-row" }, button) : null);
-    }
-
-    function statsCard(s) {
-      const p = s.player;
-      const head = h("div", { class: "srvhead" },
-        Overlord.avatar({ name: s.name, icon: s.icon }, 40),
-        h("div", null, h("strong", null, s.name), s.canManage ? h("div", { class: "perm-row", style: "margin:0.2rem 0 0" }, pill("You manage this server", "ok")) : null)
-      );
-      if (!p) return h("div", { class: "card" }, head, h("p", { class: "meta tight" }, "No account here yet. Use any command in this server to get started."));
-
-      const lvl = Math.floor(Math.sqrt(p.xp / 100));
-      const lo = lvl * lvl * 100;
-      const hi = (lvl + 1) * (lvl + 1) * 100;
-      const pct = Math.min(100, Math.max(0, ((p.xp - lo) / (hi - lo)) * 100));
-      const career = careerOf(p.works);
-      const alive = p.lastDaily && p.lastDaily >= new Date(Date.now() - 864e5).toISOString().slice(0, 10);
-
-      return h("div", { class: "card" }, head,
-        h("div", { class: "stats" },
-          stat("Coins", fmtNum(p.coins)),
-          stat("Level", lvl),
-          stat("Prestige", p.prestige),
-          stat("Career", career[1] + " " + career[0]),
-          stat("Daily streak", alive ? p.streak : 0),
-          stat("Jobs done", fmtNum(p.works)),
-          stat("Duel wins", fmtNum(p.wins)),
-          stat("Boss kills", fmtNum(p.bossKills))
-        ),
-        h("div", { class: "bar" }, h("span", { style: "width:" + pct.toFixed(0) + "%" })),
-        h("p", { class: "meta tight" }, fmtNum(p.xp - lo) + " / " + fmtNum(hi - lo) + " XP to level " + (lvl + 1)),
-        p.inventory.length ? h("p", { class: "meta tight" }, "Inventory: " + p.inventory.map(([id, n]) => id + " ×" + n).join(", ")) : null
-      );
-    }
-
-    function renderStats() {
-      const box = clear($("stats-list"));
-      if (!servers.length) {
-        box.appendChild(noteCard("No servers yet", "You're not in any server the bot is in. If you just joined one, log in again to refresh the list."));
-        return;
-      }
-      for (const s of servers) box.appendChild(statsCard(s));
-    }
-
-    async function loadServers(retried) {
-      clear($("stats-list")).appendChild(noteCard("Loading…", "Getting your servers."));
-      try {
-        const r = await api("/api/user/stats");
-        servers = r.servers || [];
-        renderStats();
-        fillSettingsPicker();
-      } catch (e) {
-        if (!retried && /Log in again/i.test(e.message)) return setTimeout(() => loadServers(true), 2500);
-        clear($("stats-list")).appendChild(noteCard("Couldn't load your servers", e.message, h("button", { type: "button", class: "btn btn-sm", onclick: () => $("login").click() }, "Log in again")));
-      }
-    }
-
-    // ---------- Server settings ----------
-
+    const NAV = [
+      ["Overview", [["stats", "📊", "My stats", "any"]]],
+      ["Moderation", [
+        ["mod-members", "🧑‍⚖️", "Members", "mod"],
+        ["mod-cases", "📚", "Cases", "mod"],
+        ["mod-tools", "🧰", "Channel tools", "mod"],
+        ["mod-setup", "🛡️", "Setup", "manage"],
+        ["mod-automod", "🤖", "Automod", "manage"],
+        ["mod-raid", "🚨", "Anti-raid", "manage"],
+        ["mod-welcome", "👋", "Welcome", "manage"],
+      ]],
+      ["Server", [
+        ["srv-general", "⚙️", "General", "manage"],
+        ["srv-channels", "#️⃣", "Channels", "manage"],
+        ["srv-commands", "⌨️", "Commands", "manage"],
+        ["srv-titles", "🏷️", "Shop titles", "manage"],
+        ["srv-panels", "🎭", "Role panels", "manage"],
+      ]],
+      ["Owner", [["admin", "🛠️", "Admin panel", "admin"]]],
+    ];
+    const TITLES = {
+      stats: ["My stats", "Your progress in every server you share with the bot."],
+      "mod-members": ["Members", "Find someone, then warn, mute, kick, ban and more. Everything is logged as a case."],
+      "mod-cases": ["Cases", "Every moderation action in this server."],
+      "mod-tools": ["Channel tools", "Slowmode, lock and purge."],
+      "mod-setup": ["Moderation setup", "Mod log, moderator roles and automatic actions for warnings."],
+      "mod-automod": ["Automod", "Automatic checks on every message. Staff are never checked."],
+      "mod-raid": ["Anti-raid", "Join-spike protection and a minimum account age."],
+      "mod-welcome": ["Welcome message", "Greets new members in a channel."],
+      "srv-general": ["General", "Switches and the command prefix."],
+      "srv-channels": ["Channels", "Where the bot posts, and where it stays quiet."],
+      "srv-commands": ["Commands", "Turn commands off in this server. Help and setup commands always stay on."],
+      "srv-titles": ["Shop titles", "Custom titles for !!shop and !!rank."],
+      "srv-panels": ["Role panels", "Buttons, dropdowns or reactions that hand out roles."],
+      admin: ["Admin panel", "Owner and allowlisted admins only."],
+    };
+    const can = (need) => need === "any" || (need === "admin" ? Boolean(me && me.isAdmin) : G && !G.error && (need === "manage" ? G.manage : G.mod));
     const cname = (c) => (c.type === 4 ? "📁 " + c.name : "#" + c.name);
-    
-    function fillSettingsPicker() {
-      const sel = clear($("set-guild"));
-      const manage = servers.filter((s) => s.canManage);
-      for (const s of manage) sel.appendChild(h("option", { value: s.id }, s.name));
-      $("set-msg").textContent = manage.length ? "" : "You don't have Manage Server in any server the bot is in. Ask a server admin, or invite the bot to a server you manage.";
-      loadedGuild = null;
-      if (current === "settings") initSettingsTab();
-    }
-    function initSettingsTab() {
-      const guild = $("set-guild").value;
-      if (guild && guild !== loadedGuild) loadSettings(guild);
-    }
-    $("set-guild").onchange = () => loadSettings($("set-guild").value);
 
-    async function loadSettings(guild) {
-      clear($("set-body"));
-      if (!guild) return;
-      $("set-msg").textContent = "Loading…";
-      try {
-        const d = await api("/api/user/settings?guild=" + encodeURIComponent(guild));
-        loadedGuild = guild;
-        $("set-msg").textContent = "";
-        renderSettings(guild, d);
-      } catch (e) {
-        $("set-msg").textContent = e.message;
-      }
-    }
+    // ---------- Building blocks ----------
+    function markDirty() { dirty = true; if (saver) $("savebar").hidden = false; }
+    function setSave(fn) { saver = fn; $("savebar").hidden = true; dirty = false; }
+    $("pane").addEventListener("input", (e) => { if (saver && !e.target.closest(".nodirty")) markDirty(); });
+    $("pane").addEventListener("change", (e) => { if (saver && !e.target.closest(".nodirty")) markDirty(); });
 
-    async function save(guild, changes) {
-      if (!Object.keys(changes).length) return toast("Nothing changed");
-      toast("Saving… (can take a few seconds)");
-      try {
-        const r = await api("/api/user/settings", { method: "POST", body: JSON.stringify({ guild, changes }) });
-        toast((r.ok ? "✅ " : "⚠️ ") + (r.result || r.status));
-        if (r.ok) loadSettings(guild);
-      } catch (e) {
-        toast("❌ " + e.message);
-      }
-    }
+    const card = (title, sub, ...kids) => h("section", { class: "card pc" }, title ? h("h2", { class: "section-title" }, title) : null, sub ? h("p", { class: "section-sub" }, sub) : null, ...kids);
+    const field = (label, control, hint) => h("label", { class: "field" }, h("span", { class: "lab" }, label), control, hint ? h("span", { class: "hint" }, hint) : null);
+    const note = (title, text, btn) => card(title, null, h("p", { class: "meta" }, text), btn ? h("div", { class: "btn-row" }, btn) : null);
 
-    function checklist(channels, selected, max) {
-      const existing = new Set(channels.map((c) => c.id));
-      const start = selected.filter((id) => existing.has(id));
-      const sel = new Set(start);
-      const q = h("input", { class: "search", type: "search", placeholder: "Filter channels…" });
+    function toggleRow(label, hint, on, disabled) {
+      const i = h("input", { type: "checkbox", checked: Boolean(on), disabled: Boolean(disabled) });
+      return { input: i, get: () => i.checked, el: h("label", { class: "trow" }, h("div", null, h("strong", null, label), hint ? h("div", { class: "hint" }, hint) : null), h("span", { class: "sw" }, i, h("i"))) };
+    }
+    const numInput = (v, min, max) => h("input", { class: "in", type: "number", inputmode: "numeric", min: String(min), max: String(max), value: String(v) });
+    function rng(el, lo, hi, label) {
+      const n = Number(el.value);
+      if (!Number.isInteger(n) || n < lo || n > hi) throw new Error(label + " must be a whole number from " + lo + " to " + hi);
+      return n;
+    }
+    function chanSelect(value, off) {
+      const sel = h("select", { class: "select" }, h("option", { value: "" }, off || "Off"), G.channels.filter((c) => c.type !== 4).map((c) => h("option", { value: c.id }, cname(c))));
+      sel.value = G.channels.some((c) => c.id === value && c.type !== 4) ? value : "";
+      return sel;
+    }
+    function durInput(ms, maxMs) {
+      const unit = ms % 864e5 === 0 ? 864e5 : ms % 36e5 === 0 ? 36e5 : 6e4;
+      const n = h("input", { class: "in", type: "number", min: "1", inputmode: "numeric", value: String(ms / unit) });
+      const u = h("select", { class: "select" }, [["Minutes", 6e4], ["Hours", 36e5], ["Days", 864e5]].map(([l, v]) => h("option", { value: String(v) }, l)));
+      u.value = String(unit);
+      return { el: h("div", { class: "dur" }, n, u), get: () => Math.min(maxMs, Math.max(6e4, Math.round(Number(n.value) * Number(u.value)))) };
+    }
+    function tagList(list, { max, placeholder, transform }) {
+      const items = [...list];
+      const box = h("div", { class: "tags" });
+      const inp = h("input", { class: "in nodirty", placeholder, maxlength: "100" });
+      const draw = () => {
+        clear(box);
+        items.forEach((t, i) => box.append(h("span", { class: "tag" }, t, h("button", { type: "button", "aria-label": "Remove " + t, onclick: () => { items.splice(i, 1); draw(); markDirty(); } }, "×"))));
+        if (!items.length) box.append(h("span", { class: "hint" }, "None yet."));
+      };
+      const add = () => {
+        const v = transform(inp.value);
+        if (!v) return;
+        if (!items.includes(v)) {
+          if (items.length >= max) return toast("Up to " + max + " allowed");
+          items.push(v); draw(); markDirty();
+        }
+        inp.value = "";
+      };
+      inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); add(); } });
+      draw();
+      return { nodes: [box, h("div", { class: "addrow" }, inp, h("button", { type: "button", class: "btn btn-sm btn-secondary", onclick: add }, "Add"))], value: () => [...items] };
+    }
+    function checklist(rows, selected, max, placeholder) {
+      const existing = new Set(rows.map((r) => r.id));
+      const sel = new Set(selected.filter((id) => existing.has(id)));
+      const q = h("input", { class: "search nodirty", type: "search", placeholder });
       const box = h("div", { class: "scroll" });
-      const count = h("p", { class: "meta tight" });
+      const count = h("p", { class: "hint" });
       const upd = () => { count.textContent = sel.size + " selected (up to " + max + ")"; };
       const draw = () => {
         clear(box);
         const f = q.value.trim().toLowerCase();
-        for (const c of channels) {
-          if (f && !c.name.toLowerCase().includes(f)) continue;
-          box.appendChild(h("label", { class: "switch-row" },
-            h("span", null, cname(c)),
-            h("input", { type: "checkbox", checked: sel.has(c.id), onchange: (e) => {
-              if (e.target.checked) {
-                if (sel.size >= max) { e.target.checked = false; toast("You can pick up to " + max); return; }
-                sel.add(c.id);
-              } else sel.delete(c.id);
-              upd();
-            } })
-          ));
+        for (const r of rows) {
+          if (f && !r.label.toLowerCase().includes(f)) continue;
+          const i = h("input", { type: "checkbox", checked: sel.has(r.id), onchange: (e) => {
+            if (e.target.checked) {
+              if (sel.size >= max) { e.target.checked = false; return toast("You can pick up to " + max); }
+              sel.add(r.id);
+            } else sel.delete(r.id);
+            upd();
+          } });
+          box.append(h("label", { class: "trow" }, h("span", null, r.label), h("span", { class: "sw" }, i, h("i"))));
         }
+        if (!box.firstChild) box.append(h("p", { class: "hint" }, "Nothing matches."));
       };
-      q.oninput = draw;
-      draw();
-      upd();
-      return {
-        nodes: [q, box, count],
-        value: () => [...sel],
-        changed: () => sel.size !== start.length || start.some((id) => !sel.has(id)),
-      };
+      q.oninput = draw; draw(); upd();
+      return { nodes: [q, box, count], value: () => [...sel] };
+    }
+    const roleRows = () => G.roles.map((r) => ({ id: r.id, label: "@" + r.name }));
+    const chanRows = () => G.channels.map((c) => ({ id: c.id, label: cname(c) }));
+
+    // ---------- Saving ----------
+    async function saveSettings(changes) {
+      if (!Object.keys(changes).length) { toast("Nothing changed"); return false; }
+      toast("Saving… (can take a few seconds)");
+      try {
+        const r = await api("/api/user/settings", { method: "POST", body: JSON.stringify({ guild: G.id, changes }) });
+        toast((r.ok ? "✅ " : "⚠️ ") + (r.result || r.status));
+        if (r.ok) { dirty = false; await loadGuild(G.id); show(current, true); }
+        return r.ok;
+      } catch (e) { toast("❌ " + e.message); return false; }
+    }
+    $("save").onclick = async () => {
+      if (!saver) return;
+      let changes;
+      try { changes = saver(); } catch (e) { return toast("⚠️ " + e.message); }
+      $("save").disabled = true;
+      await saveSettings(changes);
+      $("save").disabled = false;
+    };
+    $("discard").onclick = () => { dirty = false; show(current, true); };
+
+    async function modAct(action, payload) {
+      toast("Working… (can take a few seconds)");
+      try {
+        const r = await api("/api/user/mod/action", { method: "POST", body: JSON.stringify({ guild: G.id, action, payload }) });
+        toast((r.ok ? "✅ " : "⚠️ ") + (r.result || r.status));
+        return r;
+      } catch (e) { toast("❌ " + e.message); return null; }
     }
 
-    function renderSettings(guild, d) {
-      const body = clear($("set-body"));
-      const s = d.settings;
-      const textChannels = d.channels.filter((c) => c.type !== 4);
-      const saveBtn = (fn) => h("div", { class: "btn-row" }, h("button", { type: "button", class: "btn btn-sm", onclick: fn }, "Save"));
-
-      // General
-      const boxes = {};
-      const toggle = (key, label, hint) => {
-        boxes[key] = h("input", { type: "checkbox", checked: s[key] });
-        return h("label", { class: "switch-row" }, h("div", null, h("strong", null, label), h("div", { class: "meta tight" }, hint)), boxes[key]);
-      };
-      body.appendChild(h("div", { class: "card" },
-        h("h2", { class: "section-title" }, "General"),
-        toggle("gambling", "Gambling", "Slots, blackjack, roulette and the other games that bet coins."),
-        toggle("rob", "Robbing", "Lets members rob each other with !!rob."),
-        toggle("website", "Website leaderboards", "Lists this server on the public leaderboards and Servers page."),
-        saveBtn(() => {
-          const ch = {};
-          for (const k of Object.keys(boxes)) if (boxes[k].checked !== s[k]) ch[k] = boxes[k].checked;
-          save(guild, ch);
-        })
-      ));
-
-      // Channels
-      const picks = {};
-      const pickRow = (key, label, hint) => {
-        const sel = h("select", { class: "select" }, h("option", { value: "" }, "Off"), textChannels.map((c) => h("option", { value: c.id }, cname(c))));
-        sel.value = textChannels.some((c) => c.id === s[key]) ? s[key] : "";
-        picks[key] = sel;
-        return h("label", { class: "field" }, label, sel, h("span", { class: "meta tight", style: "font-weight:400" }, hint));
-      };
-      body.appendChild(h("div", { class: "card" },
-        h("h2", { class: "section-title" }, "Channels"),
-        pickRow("events", "Events channel", "Bot updates, bosses and announcements."),
-        pickRow("levels", "Level-ups channel", "Where level-up messages go."),
-        pickRow("board", "Realm board", "One message that keeps updating with the realm's news."),
-        saveBtn(() => {
-          const ch = {};
-          for (const k of Object.keys(picks)) if (picks[k].value !== (s[k] || "")) ch[k] = picks[k].value || null;
-          save(guild, ch);
-        })
-      ));
-
-      // Commands
-      const off = new Set(s.disabledCommands);
-      const cmdState = {};
-      const cq = h("input", { class: "search", type: "search", placeholder: "Search commands…" });
-      const clist = h("div", { class: "scroll" });
-      const drawCmds = () => {
-        clear(clist);
-        const f = cq.value.trim().toLowerCase().replace(/^!!/, "");
-        for (const c of d.commands) {
-          if (f && !c.name.includes(f)) continue;
-          const on = c.name in cmdState ? cmdState[c.name] : !off.has(c.name);
-          clist.appendChild(h("label", { class: "switch-row" },
-            h("div", null, h("strong", null, "!!" + c.name), " ", c.protected ? pill("always on") : null, h("div", { class: "meta tight" }, c.description || "")),
-            h("input", { type: "checkbox", checked: on, disabled: c.protected, onchange: (e) => { cmdState[c.name] = e.target.checked; } })
-          ));
+    // ---------- Navigation ----------
+    function buildNav() {
+      const nav = clear($("nav"));
+      for (const [group, items] of NAV) {
+        const vis = items.filter((i) => can(i[3]));
+        if (!vis.length) continue;
+        nav.append(h("div", { class: "ng" }, group));
+        for (const [id, icon, label] of vis) {
+          nav.append(h("button", { type: "button", class: "ni", "aria-current": id === current ? "page" : false, onclick: () => show(id) }, h("b", null, icon), label));
         }
-        if (!clist.firstChild) clist.textContent = "No commands match.";
-      };
-      cq.oninput = drawCmds;
-      drawCmds();
-      body.appendChild(h("div", { class: "card" },
-        h("h2", { class: "section-title" }, "Commands"),
-        h("p", { class: "section-sub" }, "Untick a command to turn it off in this server. Help and setup commands always stay on."),
-        cq, clist,
-        saveBtn(() => {
-          const ch = {};
-          for (const [name, on] of Object.entries(cmdState)) if (on !== !off.has(name)) ch[name] = on;
-          save(guild, Object.keys(ch).length ? { commands: ch } : {});
-        })
-      ));
+      }
+    }
+    function drawer(open) { $("side").classList.toggle("open", open); $("scrim").hidden = !open; }
+    $("menu-btn").onclick = () => drawer(true);
+    $("scrim").onclick = () => drawer(false);
 
-      // Ignored channels
-      const ignored = checklist(d.channels, s.ignored, 50);
-      body.appendChild(h("div", { class: "card" },
-        h("h2", { class: "section-title" }, "Ignored channels"),
-        h("p", { class: "section-sub" }, "The bot stays silent here and gives no XP. A category covers every channel inside it. Admins can still run commands."),
-        ignored.nodes,
-        saveBtn(() => save(guild, ignored.changed() ? { ignored: ignored.value() } : {}))
-      ));
+    function show(id, force) {
+      const item = NAV.flatMap((g) => g[1]).find((i) => i[0] === id);
+      if (!item || !can(item[3])) id = "stats";
+      if (!force && dirty && !confirm("Discard your unsaved changes?")) return;
+      dirty = false;
+      current = id;
+      history.replaceState(null, "", "#" + id);
+      buildNav();
+      drawer(false);
+      setSave(null);
+      const [title, sub] = TITLES[id];
+      clear($("pane-head")).append(h("h1", null, title), h("p", null, sub));
+      $("mbar-title").textContent = (G && id !== "stats" ? G.name + " · " : "") + title;
+      clear($("pane"));
+      scrollTo({ top: 0 });
+      try { RENDER[id](); } catch (e) { $("pane").append(note("Something went wrong", e.message)); }
+    }
 
-      // Games-only channels
-      const games = checklist(d.channels, s.games, 10);
-      body.appendChild(h("div", { class: "card" },
-        h("h2", { class: "section-title" }, "Games channels"),
-        h("p", { class: "section-sub" }, "Pick channels to limit games to them. Leave it empty and games work everywhere."),
-        games.nodes,
-        saveBtn(() => save(guild, games.changed() ? { games: games.value() } : {}))
-      ));
-            // ----- Custom titles -----
-      const titleBox = h("div", { class: "scroll" });
-      const drawTitles = () => {
-        clear(titleBox);
-        if (!d.titles.length) {
-          titleBox.appendChild(h("p", { class: "meta" }, "No custom titles yet."));
-          return;
+    async function loadGuild(id) {
+      const s = servers.find((x) => x.id === id);
+      if (!s) { G = null; return; }
+      G = { id, name: s.name, manage: false, mod: false, d: null, channels: [], roles: [], error: null };
+      try {
+        if (s.canManage) {
+          const d = await api("/api/user/settings?guild=" + encodeURIComponent(id));
+          Object.assign(G, { d, manage: true, mod: true, channels: d.channels, roles: d.roles });
+        } else {
+          const m = await api("/api/user/mod/meta?guild=" + encodeURIComponent(id));
+          Object.assign(G, { mod: true, manage: Boolean(m.manage), channels: m.channels, roles: m.roles });
         }
-        for (const t of d.titles) {
-          const roleName = (d.roles.find((r) => r.id === t.roleId) || {}).name;
-          titleBox.appendChild(
-            h("div", { class: "switch-row" },
-              h("div", null,
-                h("strong", null, (t.emoji || "🏷️") + " " + t.name),
-                h("div", { class: "meta tight" },
-                  fmtNum(t.price) + " coins" + (roleName ? " · @" + roleName : " · no role") + " · `" + t.id + "`"
-                )
-              ),
-              h("div", { class: "btn-row" },
-                h("button", {
-                  type: "button", class: "btn btn-sm btn-secondary", onclick: () => {
-                    formName.value = t.name;
-                    formEmoji.value = t.emoji || "🏷️";
-                    formPrice.value = String(t.price);
-                    formRole.value = t.roleId || "";
-                    formId.value = t.id;
-                  }
-                }, "Edit"),
-                h("button", {
-                  type: "button", class: "btn btn-sm btn-secondary", onclick: () => {
-                    if (!confirm("Remove title “" + t.name + "” from the shop?")) return;
-                    save(guild, { titleRemove: t.id });
-                  }
-                }, "Remove")
-              )
-            )
-          );
-        }
-      };
-      const formId = h("input", { type: "hidden", value: "" });
-      const formName = h("input", { class: "search", placeholder: "Title name", maxlength: "64" });
-      const formEmoji = h("input", { class: "search", placeholder: "Emoji", value: "🏷️", maxlength: "16" });
-      const formPrice = h("input", { class: "search", type: "number", min: "0", placeholder: "Price", inputmode: "numeric" });
-      const formRole = h("select", { class: "select" },
-        h("option", { value: "" }, "No role"),
-        (d.roles || []).map((r) => h("option", { value: r.id }, "@" + r.name))
-      );
-      drawTitles();
-      body.appendChild(h("div", { class: "card" },
-        h("h2", { class: "section-title" }, "Shop titles"),
-        h("p", { class: "section-sub" }, "Custom titles for !!shop / !!rank. Built-in items stay fixed. Linking a role needs Manage Roles for the bot."),
-        titleBox,
-        h("p", { class: "sub" }, "Add or edit"),
-        formId,
-        h("label", { class: "field" }, "Name", formName),
-        h("label", { class: "field" }, "Emoji", formEmoji),
-        h("label", { class: "field" }, "Price", formPrice),
-        h("label", { class: "field" }, "Role", formRole),
-        saveBtn(() => {
-          const name = formName.value.trim();
-          const price = Math.floor(Number(formPrice.value));
-          if (!name || !Number.isFinite(price) || price < 0) return toast("Name and price required");
-          const row = {
-            name,
-            price,
-            emoji: formEmoji.value.trim() || "🏷️",
-            roleId: formRole.value || null,
-          };
-          if (formId.value) row.id = formId.value;
-          save(guild, { titleUpsert: row });
-          formId.value = "";
-          formName.value = "";
-          formPrice.value = "";
-          formEmoji.value = "🏷️";
-          formRole.value = "";
-        })
-      ));
+      } catch (e) { G.error = e.message; }
+    }
+    async function selectGuild(id, keep) {
+      if (dirty && !confirm("Discard your unsaved changes?")) { $("guild-pick").value = G ? G.id : ""; return; }
+      dirty = false;
+      localStorage.setItem(GUILD_KEY, id);
+      clear($("pane")).append(note("Loading…", "Getting " + ((servers.find((s) => s.id === id) || {}).name || "the server") + "."));
+      await loadGuild(id);
+      show(keep || (current === "stats" ? "stats" : current), true);
+    }
+    function fillPicker() {
+      const sel = clear($("guild-pick"));
+      const mine = servers.filter((s) => s.canManage || s.canModerate);
+      const other = servers.filter((s) => !s.canManage && !s.canModerate);
+      if (mine.length) sel.append(h("optgroup", { label: "You manage or moderate" }, mine.map((s) => h("option", { value: s.id }, s.name))));
+      if (other.length) sel.append(h("optgroup", { label: "Other (moderator role?)" }, other.map((s) => h("option", { value: s.id }, s.name))));
+      const stored = localStorage.getItem(GUILD_KEY);
+      const pick = servers.find((s) => s.id === stored) || mine[0] || servers[0];
+      if (pick) sel.value = pick.id;
+      return pick ? pick.id : null;
+    }
+    $("guild-pick").onchange = (e) => selectGuild(e.target.value);
 
-      // ----- Reaction role panels -----
-      const panelBox = h("div", { class: "scroll" });
-      const drawPanels = () => {
-        clear(panelBox);
-        if (!d.panels.length) {
-          panelBox.appendChild(h("p", { class: "meta" }, "No role panels yet."));
-          return;
-        }
-        for (const p of d.panels) {
-          const jump = "https://discord.com/channels/" + guild + "/" + p.channelId + "/" + p.messageId;
-          panelBox.appendChild(
-            h("div", { class: "switch-row" },
-              h("div", null,
-                h("strong", null, p.title || "Panel"),
-                h("div", { class: "meta tight" },
-                  (p.mode || "?") + " · " + p.roleCount + " role(s)" + (p.exclusive ? " · exclusive" : "")
-                )
-              ),
-              h("div", { class: "btn-row" },
-                h("a", { class: "btn btn-sm btn-secondary", href: jump, target: "_blank", rel: "noopener" }, "Open"),
-                h("button", {
-                  type: "button", class: "btn btn-sm btn-secondary", onclick: () => {
-                    if (!confirm("Delete this role panel message?")) return;
-                    save(guild, { rrDelete: p.messageId });
-                  }
-                }, "Delete")
-              )
-            )
-          );
-        }
-      };
-      drawPanels();
+    // ---------- Sections ----------
+    const RENDER = {};
+    const needManage = () => { if (G && G.error) { $("pane").append(note("Can't open this server", G.error)); return true; } if (!G) { $("pane").append(note("No server", "Pick a server on the left.")); return true; } return false; };
 
-      const rrMode = h("select", { class: "select" },
-        h("option", { value: "buttons" }, "Buttons"),
-        h("option", { value: "dropdown" }, "Dropdown"),
-        h("option", { value: "reactions" }, "Reactions")
-      );
-      const rrChannel = h("select", { class: "select" },
-        h("option", { value: "" }, "Pick a channel"),
-        textChannels.map((c) => h("option", { value: c.id }, cname(c)))
-      );
-      const rrTitle = h("input", { class: "search", placeholder: "Panel title", value: "Pick your roles" });
-      const rrDesc = h("input", { class: "search", placeholder: "Description (optional)" });
-      const rrExclusive = h("input", { type: "checkbox" });
-      const rrRolesBox = h("div", { class: "scroll" });
-      const rrPicked = []; // { roleId, emoji, description }
+    // ----- My stats -----
+    const CAREERS = [["Intern", "📎", 0], ["Barista", "☕", 25], ["Technician", "🔧", 75], ["Manager", "📋", 200], ["Director", "💼", 500], ["CEO", "👑", 1000]];
+    const careerOf = (w) => { let c = CAREERS[0]; for (const x of CAREERS) if (w >= x[2]) c = x; return c; };
+    function statsCard(s) {
+      const p = s.player;
+      const head = h("div", { class: "srvhead" }, Overlord.avatar({ name: s.name, icon: s.icon }, 40),
+        h("div", null, h("strong", null, s.name), s.canManage ? h("div", { class: "perm-row", style: "margin:0.2rem 0 0" }, pill("You manage this server", "ok")) : s.canModerate ? h("div", { class: "perm-row", style: "margin:0.2rem 0 0" }, pill("You moderate this server", "ok")) : null));
+      if (!p) return h("div", { class: "card" }, head, h("p", { class: "meta tight" }, "No account here yet. Use any command in this server to get started."));
+      const lvl = Math.floor(Math.sqrt(p.xp / 100));
+      const lo = lvl * lvl * 100, hi = (lvl + 1) * (lvl + 1) * 100;
+      const pct = Math.min(100, Math.max(0, ((p.xp - lo) / (hi - lo)) * 100));
+      const career = careerOf(p.works);
+      const alive = p.lastDaily && p.lastDaily >= new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+      return h("div", { class: "card" }, head,
+        h("div", { class: "stats" }, stat("Coins", fmtNum(p.coins)), stat("Level", lvl), stat("Prestige", p.prestige), stat("Career", career[1] + " " + career[0]), stat("Daily streak", alive ? p.streak : 0), stat("Jobs done", fmtNum(p.works)), stat("Duel wins", fmtNum(p.wins)), stat("Boss kills", fmtNum(p.bossKills))),
+        h("div", { class: "bar" }, h("span", { style: "width:" + pct.toFixed(0) + "%" })),
+        h("p", { class: "meta tight" }, fmtNum(p.xp - lo) + " / " + fmtNum(hi - lo) + " XP to level " + (lvl + 1)),
+        p.inventory.length ? h("p", { class: "meta tight" }, "Inventory: " + p.inventory.map(([id, n]) => id + " ×" + n).join(", ")) : null);
+    }
+    RENDER.stats = () => {
+      if (!servers.length) return $("pane").append(note("No servers yet", "You're not in any server the bot is in. If you just joined one, log in again to refresh the list."));
+      $("pane").append(h("div", { class: "stats-grid" }, servers.map(statsCard)));
+    };
 
-      const redrawRrRoles = () => {
-        clear(rrRolesBox);
-        if (!rrPicked.length) {
-          rrRolesBox.appendChild(h("p", { class: "meta" }, "No roles added yet."));
-          return;
-        }
-        rrPicked.forEach((row, i) => {
-          const rn = (d.roles.find((r) => r.id === row.roleId) || {}).name || row.roleId;
-          rrRolesBox.appendChild(
-            h("div", { class: "switch-row" },
-              h("div", null, h("strong", null, (row.emoji || "🔘") + " @" + rn)),
-              h("button", {
-                type: "button", class: "btn btn-sm btn-secondary", onclick: () => {
-                  rrPicked.splice(i, 1);
-                  redrawRrRoles();
-                }
-              }, "Remove")
-            )
-          );
+    // ----- Moderation: setup -----
+    RENDER["mod-setup"] = () => {
+      if (needManage()) return;
+      const m = G.d.mod;
+      const modlog = chanSelect(m.modlog, "Off (no log)");
+      const roles = checklist(roleRows(), m.modRoles, 10, "Filter roles…");
+      const dm = toggleRow("DM people I act on", "Members get a DM with the reason when they're warned, muted, kicked or banned.", m.dmUsers);
+
+      const rules = Object.entries(m.warnActions).map(([c, r]) => ({ count: Number(c), action: r.action, duration: r.duration || 36e5 })).sort((a, b) => a.count - b.count);
+      const rbox = h("div", { class: "rules" });
+      const drawRules = () => {
+        clear(rbox);
+        if (!rules.length) rbox.append(h("p", { class: "hint" }, "No automatic actions yet."));
+        rules.forEach((r, i) => {
+          const n = h("input", { class: "in sm", type: "number", min: "1", max: "20", value: String(r.count), oninput: (e) => { r.count = Number(e.target.value); } });
+          const a = h("select", { class: "select sm", onchange: (e) => { r.action = e.target.value; drawRules(); markDirty(); } }, ["mute", "kick", "ban"].map((x) => h("option", { value: x }, x)));
+          a.value = r.action;
+          r._d = r.action === "mute" ? durInput(r.duration, 28 * 864e5) : null;
+          rbox.append(h("div", { class: "rule" }, h("span", null, "At"), n, h("span", null, "warnings →"), a, r._d ? r._d.el : null,
+            h("button", { type: "button", class: "btn btn-sm btn-secondary", onclick: () => { rules.splice(i, 1); drawRules(); markDirty(); } }, "Remove")));
         });
       };
-      redrawRrRoles();
+      drawRules();
 
-      const addRoleSel = h("select", { class: "select" },
-        h("option", { value: "" }, "Add role…"),
-        (d.roles || []).map((r) => h("option", { value: r.id }, "@" + r.name))
+      $("pane").append(
+        card("Mod log", "Every action is posted here with a case number.", field("Channel", modlog, "I need View Channel, Send Messages and Embed Links there.")),
+        card("Moderator roles", "These roles can warn, mute, purge, lock and set slowmode without extra Discord permissions. Kick, ban, nickname and role changes still need the real Discord permission.", roles.nodes),
+        card("Warnings", "Warnings stack. Choose what happens automatically at a certain count.", dm.el, h("p", { class: "sub" }, "Automatic actions"), rbox,
+          h("div", { class: "btn-row" }, h("button", { type: "button", class: "btn btn-sm btn-secondary", onclick: () => {
+            if (rules.length >= 20) return toast("Up to 20 rules");
+            const used = new Set(rules.map((r) => r.count));
+            let c = 3; while (used.has(c) && c < 20) c++;
+            rules.push({ count: c, action: "mute", duration: 36e5 }); drawRules(); markDirty();
+          } }, "+ Add rule")))
       );
-      const addEmoji = h("input", { class: "search", placeholder: "Emoji (needed for Reactions)", maxlength: "64" });
-      const addRoleBtn = h("button", {
-        type: "button", class: "btn btn-sm", onclick: () => {
-          const roleId = addRoleSel.value;
-          if (!roleId) return toast("Pick a role");
-          if (rrPicked.some((x) => x.roleId === roleId)) return toast("Already added");
-          if (rrPicked.length >= 25) return toast("Max 25 roles");
-          const rn = (d.roles.find((r) => r.id === roleId) || {}).name || roleId;
-          rrPicked.push({
-            roleId,
-            emoji: addEmoji.value.trim(),
-            description: rn,
-          });
-          addRoleSel.value = "";
-          addEmoji.value = "";
-          redrawRrRoles();
+      setSave(() => {
+        const map = {};
+        for (const r of rules) {
+          if (!Number.isInteger(r.count) || r.count < 1 || r.count > 20) throw new Error("Warning counts must be 1–20");
+          if (map[r.count]) throw new Error("Two rules use " + r.count + " warnings");
+          map[r.count] = r.action === "mute" ? { action: "mute", duration: r._d.get() } : { action: r.action };
         }
-      }, "Add role");
+        return { mod: { modlog: modlog.value || null, modRoles: roles.value(), dmUsers: dm.get(), warnActions: map } };
+      });
+    };
 
-      body.appendChild(h("div", { class: "card" },
-        h("h2", { class: "section-title" }, "Role panels"),
-        h("p", { class: "section-sub" }, "Post a buttons / dropdown / reactions panel. Same safety rules as !!reactionroles (no mod roles, hierarchy respected)."),
-        panelBox,
-        h("p", { class: "sub" }, "New panel"),
-        h("label", { class: "field" }, "Mode", rrMode),
-        h("label", { class: "field" }, "Channel", rrChannel),
-        h("label", { class: "field" }, "Title", rrTitle),
-        h("label", { class: "field" }, "Description", rrDesc),
-        h("label", { class: "switch-row" },
-          h("div", null, h("strong", null, "Exclusive"), h("div", { class: "meta tight" }, "Only one of these roles at a time")),
-          rrExclusive
-        ),
-        rrRolesBox,
-        h("label", { class: "field" }, "Role", addRoleSel),
-        h("label", { class: "field" }, "Emoji", addEmoji),
-        h("div", { class: "btn-row" }, addRoleBtn),
-        saveBtn(() => {
-          if (!rrChannel.value) return toast("Pick a channel");
-          if (!rrPicked.length) return toast("Add at least one role");
-          if (rrMode.value === "reactions" && rrPicked.some((r) => !r.emoji)) {
-            return toast("Reactions mode needs an emoji on every role");
+    // ----- Moderation: automod -----
+    RENDER["mod-automod"] = () => {
+      if (needManage()) return;
+      const a = G.d.mod.automod;
+      const T = {};
+      const spamM = numInput(a.spamMessages, 3, 20), spamS = numInput(a.spamSeconds, 2, 60), ment = numInput(a.maxMentions, 2, 50), caps = numInput(a.capsPercent, 40, 100);
+      const defs = [
+        ["invites", "Discord invites", "Deletes invite links to other servers.", null],
+        ["links", "All links", "Deletes every link except the allowed domains below.", null],
+        ["spam", "Spam", "Too many messages too fast. Spammers are muted for 5 minutes.", h("div", { class: "grid2" }, field("Messages", spamM), field("Within (seconds)", spamS))],
+        ["caps", "Too many capitals", "Deletes messages that are mostly capital letters.", h("div", { class: "grid2" }, field("Capital letters (%)", caps))],
+        ["mentions", "Mass mentions", "Deletes messages that mention too many people.", h("div", { class: "grid2" }, field("Mentions allowed", ment))],
+        ["words", "Blocked words", "Deletes messages with a word from your list.", null],
+      ];
+      const rulesCard = card("Rules", null);
+      for (const [k, label, hint, extra] of defs) {
+        T[k] = toggleRow(label, hint, a[k]);
+        rulesCard.append(T[k].el);
+        if (extra) rulesCard.append(h("div", { class: "subin" }, extra));
+      }
+      const punish = h("select", { class: "select" }, h("option", { value: "delete" }, "Delete the message and post a short notice"), h("option", { value: "warn" }, "Delete and also warn the member"));
+      punish.value = a.punish;
+      const words = tagList(a.badWords, { max: 100, placeholder: "Add a word or phrase…", transform: (v) => v.toLowerCase().trim().slice(0, 40) });
+      const doms = tagList(a.allowedDomains, { max: 50, placeholder: "site.com", transform: (v) => v.toLowerCase().trim().replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0] });
+      const ic = checklist(chanRows(), a.ignoredChannels, 50, "Filter channels…");
+      const ir = checklist(roleRows(), a.ignoredRoles, 50, "Filter roles…");
+
+      $("pane").append(
+        rulesCard,
+        card("When someone breaks a rule", "Warnings can trigger the automatic actions from Setup.", field("Punishment", punish)),
+        h("div", { class: "cols" },
+          card("Blocked words", "Only people with Manage Server can see this list here.", words.nodes),
+          card("Allowed domains", "Links to these sites are kept even when “All links” is on.", doms.nodes)),
+        h("div", { class: "cols" },
+          card("Ignored channels", "Automod skips these channels. A category covers all its channels.", ic.nodes),
+          card("Ignored roles", "Members with these roles are skipped.", ir.nodes))
+      );
+      setSave(() => {
+        const o = { punish: punish.value, spamMessages: rng(spamM, 3, 20, "Spam messages"), spamSeconds: rng(spamS, 2, 60, "Spam seconds"), maxMentions: rng(ment, 2, 50, "Mentions allowed"), capsPercent: rng(caps, 40, 100, "Capital letters"),
+          badWords: words.value(), allowedDomains: doms.value(), ignoredChannels: ic.value(), ignoredRoles: ir.value() };
+        for (const k of Object.keys(T)) o[k] = T[k].get();
+        return { mod: { automod: o } };
+      });
+    };
+
+    // ----- Moderation: anti-raid -----
+    RENDER["mod-raid"] = () => {
+      if (needManage()) return;
+      const r = G.d.mod.antiraid;
+      const on = toggleRow("Anti-raid protection", "Needs the Server Members intent (already on) and Kick/Ban/Moderate Members.", r.enabled);
+      const age = numInput(r.minAccountAgeHours, 0, 720), thr = numInput(r.joinThreshold, 3, 50), win = numInput(r.joinWindowSec, 5, 120);
+      const action = h("select", { class: "select" }, [["kick", "Kick them"], ["ban", "Ban them"], ["timeout", "Time them out for 1 hour"]].map(([v, l]) => h("option", { value: v }, l)));
+      action.value = r.action;
+      const lock = toggleRow("Soft-lock channels during a raid", "Stops @everyone from sending messages in every text channel. Needs Manage Channels. You unlock with !!unlock.", r.lockOnRaid);
+      const alert = chanSelect(r.alertChannelId, "No alerts");
+      $("pane").append(
+        card("Protection", null, on.el),
+        card("New accounts", "Accounts younger than this are punished when they join.", field("Minimum account age (hours, 0 = off)", age, "Maximum 720 hours (30 days).")),
+        card("Join spikes", "A raid is detected when this many people join within the window.", h("div", { class: "grid2" }, field("Joins", thr), field("Window (seconds)", win))),
+        card("Response", null, field("Punishment", action), lock.el, field("Alert channel", alert, "Gets a message when a raid is detected."))
+      );
+      setSave(() => ({ mod: { antiraid: { enabled: on.get(), minAccountAgeHours: rng(age, 0, 720, "Minimum account age"), joinThreshold: rng(thr, 3, 50, "Joins"), joinWindowSec: rng(win, 5, 120, "Window"), action: action.value, lockOnRaid: lock.get(), alertChannelId: alert.value || null } } }));
+    };
+
+    // ----- Moderation: welcome -----
+    RENDER["mod-welcome"] = () => {
+      if (needManage()) return;
+      const w = G.d.mod.welcome;
+      const on = toggleRow("Welcome new members", null, w.enabled);
+      const ch = chanSelect(w.channelId, "Pick a channel");
+      const msg = h("textarea", { class: "in", maxlength: "1800" });
+      msg.value = w.message;
+      const prev = h("div", { class: "note", style: "white-space:pre-wrap;overflow-wrap:anywhere" });
+      const draw = () => { prev.textContent = msg.value.replaceAll("{user}", "@NewMember").replaceAll("{server}", G.name).replaceAll("{membercount}", "123"); };
+      msg.addEventListener("input", draw); draw();
+      const tok = (t) => h("button", { type: "button", class: "btn btn-sm btn-secondary", onclick: () => { msg.value += t; draw(); markDirty(); } }, t);
+      $("pane").append(
+        card("Welcome message", null, on.el, field("Channel", ch), field("Message", msg, "Supports Discord markdown."),
+          h("div", { class: "btn-row" }, tok("{user}"), tok("{server}"), tok("{membercount}")),
+          h("p", { class: "sub" }, "Preview"), prev,
+          h("div", { class: "btn-row" }, h("button", { type: "button", class: "btn btn-sm btn-secondary nodirty", onclick: () => {
+            if (dirty) return toast("Save first, then send the test");
+            modAct("welcomeTest", {});
+          } }, "Send a test")))
+      );
+      setSave(() => {
+        if (on.get() && !ch.value) throw new Error("Pick a welcome channel first");
+        if (!msg.value.trim()) throw new Error("Write a welcome message");
+        return { mod: { welcome: { enabled: on.get(), channelId: ch.value || null, message: msg.value.trim() } } };
+      });
+    };
+
+    // ----- Server: general -----
+    RENDER["srv-general"] = () => {
+      if (needManage()) return;
+      const s = G.d.settings;
+      const T = {
+        gambling: toggleRow("Gambling", "Slots, blackjack, roulette and the other games that bet coins.", s.gambling),
+        rob: toggleRow("Robbing", "Lets members rob each other with !!rob.", s.rob),
+        website: toggleRow("Website listing", "Shows this server on the public leaderboards and Servers page.", s.website),
+      };
+      const prefix = h("input", { class: "in", maxlength: "5", value: G.d.mod.prefix, autocapitalize: "off", autocomplete: "off" });
+      $("pane").append(
+        card("Switches", null, T.gambling.el, T.rob.el, T.website.el),
+        card("Command prefix", "Up to 5 characters, no spaces. !!help and !!prefix always work on !! so nobody gets locked out. Leave it empty or type !! to reset.", field("Prefix", prefix))
+      );
+      setSave(() => {
+        const ch = {};
+        for (const k of Object.keys(T)) if (T[k].get() !== s[k]) ch[k] = T[k].get();
+        const p = prefix.value.trim();
+        if (/\s/.test(p) || p.length > 5) throw new Error("The prefix can't contain spaces and is at most 5 characters");
+        if ((p || "!!") !== G.d.mod.prefix) ch.mod = { prefix: p };
+        return ch;
+      });
+    };
+
+    // ----- Server: channels -----
+    RENDER["srv-channels"] = () => {
+      if (needManage()) return;
+      const s = G.d.settings;
+      const picks = { events: chanSelect(s.events, "Off"), levels: chanSelect(s.levels, "Off"), board: chanSelect(s.board, "Off") };
+      const ignored = checklist(chanRows(), s.ignored, 50, "Filter channels…");
+      const games = checklist(chanRows(), s.games, 10, "Filter channels…");
+      $("pane").append(
+        card("Where the bot posts", null,
+          field("Events channel", picks.events, "Bot updates, bosses and announcements."),
+          field("Level-ups channel", picks.levels, "Where level-up messages go."),
+          field("Realm board", picks.board, "One message that keeps updating with the realm's news.")),
+        h("div", { class: "cols" },
+          card("Ignored channels", "The bot stays silent here and gives no XP. A category covers every channel inside it. Admins can still run commands.", ignored.nodes),
+          card("Games channels", "Pick channels to limit games to them. Leave it empty and games work everywhere.", games.nodes))
+      );
+      setSave(() => {
+        const ch = {};
+        const cur = { events: s.events, levels: s.levels, board: s.board };
+        for (const k of Object.keys(picks)) if ((picks[k].value || null) !== (cur[k] || null)) ch[k] = picks[k].value || null;
+        const same = (a, b) => a.length === b.length && a.every((x) => b.includes(x));
+        if (!same(ignored.value(), s.ignored)) ch.ignored = ignored.value();
+        if (!same(games.value(), s.games)) ch.games = games.value();
+        return ch;
+      });
+    };
+
+    // ----- Server: commands -----
+    RENDER["srv-commands"] = () => {
+      if (needManage()) return;
+      const off = new Set(G.d.settings.disabledCommands);
+      const state = {};
+      const q = h("input", { class: "search nodirty", type: "search", placeholder: "Search commands…" });
+      const box = h("div", { class: "scroll", style: "max-height:none;padding:0 0.8rem" });
+      const draw = () => {
+        clear(box);
+        const f = q.value.trim().toLowerCase().replace(/^!!/, "");
+        for (const c of G.d.commands) {
+          if (f && !(c.name.includes(f) || (c.description || "").toLowerCase().includes(f))) continue;
+          const on = c.name in state ? state[c.name] : !off.has(c.name);
+          const i = h("input", { type: "checkbox", checked: on, disabled: c.protected, onchange: (e) => { state[c.name] = e.target.checked; } });
+          box.append(h("label", { class: "trow" }, h("div", null, h("strong", null, "!!" + c.name), " ", c.protected ? pill("always on") : null, h("div", { class: "hint" }, c.description || "")), h("span", { class: "sw" }, i, h("i"))));
+        }
+        if (!box.firstChild) box.append(h("p", { class: "hint" }, "No commands match."));
+      };
+      q.oninput = draw; draw();
+      $("pane").append(card(null, null, q, box));
+      setSave(() => {
+        const ch = {};
+        for (const [name, on] of Object.entries(state)) if (on !== !off.has(name)) ch[name] = on;
+        return Object.keys(ch).length ? { commands: ch } : {};
+      });
+    };
+
+    // ----- Server: shop titles -----
+    RENDER["srv-titles"] = () => {
+      if (needManage()) return;
+      const d = G.d;
+      const formId = h("input", { type: "hidden", value: "" });
+      const fName = h("input", { class: "in", placeholder: "Title name", maxlength: "64" });
+      const fEmoji = h("input", { class: "in", placeholder: "Emoji", value: "🏷️", maxlength: "16" });
+      const fPrice = h("input", { class: "in", type: "number", min: "0", placeholder: "Price", inputmode: "numeric" });
+      const fRole = h("select", { class: "select" }, h("option", { value: "" }, "No role"), d.roles.map((r) => h("option", { value: r.id }, "@" + r.name)));
+      const list = h("div");
+      if (!d.titles.length) list.append(h("p", { class: "hint" }, "No custom titles yet."));
+      for (const t of d.titles) {
+        const rn = (d.roles.find((r) => r.id === t.roleId) || {}).name;
+        list.append(h("div", { class: "li" },
+          h("div", null, h("strong", null, (t.emoji || "🏷️") + " " + t.name), h("div", { class: "hint" }, fmtNum(t.price) + " coins" + (rn ? " · @" + rn : " · no role"))),
+          h("div", { class: "btn-row" },
+            h("button", { type: "button", class: "btn btn-sm btn-secondary", onclick: () => { formId.value = t.id; fName.value = t.name; fEmoji.value = t.emoji || "🏷️"; fPrice.value = String(t.price); fRole.value = t.roleId || ""; fName.scrollIntoView({ block: "center" }); } }, "Edit"),
+            h("button", { type: "button", class: "btn btn-sm btn-secondary", onclick: () => { if (confirm("Remove “" + t.name + "” from the shop?")) saveSettings({ titleRemove: t.id }); } }, "Remove"))));
+      }
+      $("pane").append(
+        card("Your titles", "Built-in items stay fixed.", list),
+        card("Add or edit a title", "Linking a role needs Manage Roles for the bot, and the role must be below the bot's highest role.", formId,
+          h("div", { class: "grid2" }, field("Name", fName), field("Emoji", fEmoji), field("Price (coins)", fPrice), field("Role", fRole)),
+          h("div", { class: "btn-row" }, h("button", { type: "button", class: "btn btn-sm", onclick: () => {
+            const name = fName.value.trim(), price = Math.floor(Number(fPrice.value));
+            if (!name || !Number.isFinite(price) || price < 0) return toast("Name and price required");
+            const row = { name, price, emoji: fEmoji.value.trim() || "🏷️", roleId: fRole.value || null };
+            if (formId.value) row.id = formId.value;
+            saveSettings({ titleUpsert: row });
+          } }, "Save title")))
+      );
+    };
+
+    // ----- Server: role panels -----
+    RENDER["srv-panels"] = () => {
+      if (needManage()) return;
+      const d = G.d;
+      const textChannels = G.channels.filter((c) => c.type !== 4);
+      const list = h("div");
+      if (!d.panels.length) list.append(h("p", { class: "hint" }, "No role panels yet."));
+      for (const p of d.panels) {
+        list.append(h("div", { class: "li" },
+          h("div", null, h("strong", null, p.title || "Panel"), h("div", { class: "hint" }, (p.mode || "?") + " · " + p.roleCount + " role(s)" + (p.exclusive ? " · exclusive" : ""))),
+          h("div", { class: "btn-row" },
+            h("a", { class: "btn btn-sm btn-secondary", href: "https://discord.com/channels/" + G.id + "/" + p.channelId + "/" + p.messageId, target: "_blank", rel: "noopener" }, "Open"),
+            h("button", { type: "button", class: "btn btn-sm btn-secondary", onclick: () => { if (confirm("Delete this role panel message?")) saveSettings({ rrDelete: p.messageId }); } }, "Delete"))));
+      }
+      const mode = h("select", { class: "select" }, [["buttons", "Buttons"], ["dropdown", "Dropdown"], ["reactions", "Reactions"]].map(([v, l]) => h("option", { value: v }, l)));
+      const chan = h("select", { class: "select" }, h("option", { value: "" }, "Pick a channel"), textChannels.map((c) => h("option", { value: c.id }, cname(c))));
+      const title = h("input", { class: "in", value: "Pick your roles", maxlength: "100" });
+      const desc = h("input", { class: "in", placeholder: "Optional", maxlength: "1000" });
+      const excl = toggleRow("Exclusive", "Only one of these roles at a time.", false);
+      const picked = [];
+      const pbox = h("div");
+      const redraw = () => {
+        clear(pbox);
+        if (!picked.length) pbox.append(h("p", { class: "hint" }, "No roles added yet."));
+        picked.forEach((row, i) => {
+          const rn = (d.roles.find((r) => r.id === row.roleId) || {}).name || row.roleId;
+          pbox.append(h("div", { class: "li" }, h("strong", null, (row.emoji || "🔘") + " @" + rn), h("button", { type: "button", class: "btn btn-sm btn-secondary", onclick: () => { picked.splice(i, 1); redraw(); } }, "Remove")));
+        });
+      };
+      redraw();
+      const roleSel = h("select", { class: "select" }, h("option", { value: "" }, "Pick a role…"), d.roles.map((r) => h("option", { value: r.id }, "@" + r.name)));
+      const emoji = h("input", { class: "in", placeholder: "Emoji (needed for Reactions)", maxlength: "64" });
+      $("pane").append(
+        card("Existing panels", null, list),
+        card("New panel", "Same safety rules as !!reactionroles: no mod roles, role order respected.",
+          h("div", { class: "grid2" }, field("Style", mode), field("Channel", chan), field("Title", title), field("Description", desc)),
+          excl.el, h("p", { class: "sub" }, "Roles"), pbox,
+          h("div", { class: "grid2" }, field("Role", roleSel), field("Emoji", emoji)),
+          h("div", { class: "btn-row" },
+            h("button", { type: "button", class: "btn btn-sm btn-secondary", onclick: () => {
+              if (!roleSel.value) return toast("Pick a role");
+              if (picked.some((x) => x.roleId === roleSel.value)) return toast("Already added");
+              if (picked.length >= 25) return toast("Max 25 roles");
+              const rn = (d.roles.find((r) => r.id === roleSel.value) || {}).name || "";
+              picked.push({ roleId: roleSel.value, emoji: emoji.value.trim(), description: rn });
+              roleSel.value = ""; emoji.value = ""; redraw();
+            } }, "+ Add role"),
+            h("button", { type: "button", class: "btn btn-sm", onclick: () => {
+              if (!chan.value) return toast("Pick a channel");
+              if (!picked.length) return toast("Add at least one role");
+              if (mode.value === "reactions" && picked.some((r) => !r.emoji)) return toast("Reactions mode needs an emoji on every role");
+              saveSettings({ rrPublish: { mode: mode.value, channelId: chan.value, title: title.value.trim() || "Pick your roles", description: desc.value.trim(), exclusive: excl.get(), roles: picked.map((r) => ({ roleId: r.roleId, emoji: r.emoji || "🔘", description: r.description })) } });
+            } }, "Post panel")))
+      );
+    };
+
+    // ----- Moderation: members -----
+    const TYPE_EMOJI = { warn: "⚠️", mute: "🔇", unmute: "🔊", kick: "👢", ban: "🔨", tempban: "⏳", softban: "🧹", unban: "🕊️", note: "📝" };
+    const nameOf = (id) => NAMES[id] || id;
+    function caseCard(c, onChange) {
+      const el = h("div", { class: "case t-" + c.type + (c.removed ? " gone" : "") },
+        h("div", { class: "case-head" }, h("strong", null, (TYPE_EMOJI[c.type] || "🔨") + " " + c.type + " · #" + c.id + (c.removed ? " (removed)" : "")), h("small", null, ago(c.at))),
+        h("small", null, (c.userId ? "User: " + nameOf(c.userId) : "") + " · By: " + (c.modId ? nameOf(c.modId) : "?") + (c.until ? " · until " + new Date(c.until).toLocaleString() : "")),
+        h("p", null, c.reason || "No reason"));
+      const row = h("div", { class: "btn-row" });
+      row.append(h("button", { type: "button", class: "btn btn-sm btn-secondary", onclick: async () => {
+        const r = prompt("New reason for case #" + c.id + ":", c.reason);
+        if (r === null || !r.trim()) return;
+        const res = await modAct("reason", { caseId: c.id, reason: r.trim() });
+        if (res && res.ok) onChange();
+      } }, "Edit reason"));
+      if (c.type === "warn" && !c.removed) {
+        row.append(h("button", { type: "button", class: "btn btn-sm btn-secondary", onclick: async () => {
+          if (!confirm("Remove warning #" + c.id + "?")) return;
+          const res = await modAct("delwarn", { caseId: c.id });
+          if (res && res.ok) onChange();
+        } }, "Remove warning"));
+      }
+      el.append(row);
+      return el;
+    }
+
+    RENDER["mod-members"] = () => {
+      if (needManage()) return;
+      let mode = "members", picked = null;
+      const tabs = h("div", { class: "tabs flush" });
+      const q = h("input", { class: "search nodirty", type: "search", placeholder: "Search by name, or paste a user ID…", autocomplete: "off" });
+      const results = h("div", { class: "results" });
+      const panel = h("div");
+      const finder = card("Find someone", null, tabs, q, results);
+      $("pane").append(finder, panel);
+
+      const drawTabs = () => {
+        clear(tabs);
+        for (const [k, l] of [["members", "👥 Members"], ["bans", "🚫 Banned users"]]) {
+          tabs.append(h("button", { type: "button", class: "tab", "aria-pressed": String(mode === k), onclick: () => { mode = k; clear(results); q.value = ""; q.placeholder = k === "bans" ? "Filter the ban list…" : "Search by name, or paste a user ID…"; drawTabs(); if (k === "bans") loadBans(); } }, l));
+        }
+      };
+      const row = (u, sub, extra, onclick) => h("button", { type: "button", class: "pickrow", "aria-pressed": String(Boolean(picked) && picked.id === u.id), onclick },
+        h("img", { class: "mav", src: u.avatar, alt: "", loading: "lazy" }), h("span", { style: "min-width:0;flex:1;overflow-wrap:anywhere" }, h("strong", null, u.name), h("small", null, sub)), extra);
+
+      let timer;
+      q.addEventListener("input", () => {
+        clearTimeout(timer);
+        if (mode === "bans") return drawBans();
+        const v = q.value.trim();
+        if (!v) return clear(results);
+        timer = setTimeout(async () => {
+          try {
+            const { members } = await api("/api/user/mod/members?guild=" + G.id + "&q=" + encodeURIComponent(v));
+            clear(results);
+            if (!members.length) results.append(h("p", { class: "hint", style: "padding:0.7rem" }, "Nobody found. Try their exact username, or paste their user ID."));
+            for (const m of members) results.append(row(m, "@" + m.username + (m.nick ? " · " + m.nick : "") + (m.inServer ? "" : " · not in this server"), m.bot ? pill("bot") : null, () => { showMember(m); drawResultsActive(m); }));
+          } catch (e) { clear(results).append(h("p", { class: "hint", style: "padding:0.7rem" }, e.message)); }
+        }, 350);
+      });
+      const drawResultsActive = (m) => { picked = m; [...results.children].forEach((b) => b.setAttribute && b.setAttribute("aria-pressed", "false")); };
+
+      let bans = null;
+      async function loadBans() {
+        clear(results).append(h("p", { class: "hint", style: "padding:0.7rem" }, "Loading…"));
+        try { bans = (await api("/api/user/mod/bans?guild=" + G.id)).bans; drawBans(); }
+        catch (e) { clear(results).append(h("p", { class: "hint", style: "padding:0.7rem" }, e.message)); }
+      }
+      function drawBans() {
+        if (!bans) return;
+        clear(results);
+        const f = q.value.trim().toLowerCase();
+        const hits = bans.filter((b) => !f || (b.name + " " + b.username + " " + b.id + " " + b.reason).toLowerCase().includes(f)).slice(0, 60);
+        if (!hits.length) results.append(h("p", { class: "hint", style: "padding:0.7rem" }, bans.length ? "Nobody matches." : "Nobody is banned."));
+        for (const b of hits) {
+          results.append(row(b, (b.reason || "No reason") + " · " + b.id, h("span", { class: "btn btn-sm btn-secondary", role: "button", onclick: async (e) => {
+            e.stopPropagation();
+            const r = prompt("Unban " + b.name + ". Reason (optional):", "");
+            if (r === null) return;
+            const res = await modAct("unban", { userId: b.id, reason: r.trim() });
+            if (res && res.ok) { bans = bans.filter((x) => x.id !== b.id); drawBans(); }
+          } }, "Unban"), () => {}));
+        }
+      }
+
+      const ACTS = [
+        ["warn", "⚠️ Warn", true], ["mute", "🔇 Mute", true], ["unmute", "🔊 Unmute", true], ["kick", "👢 Kick", true], ["ban", "🔨 Ban", false], ["tempban", "⏳ Tempban", false],
+        ["softban", "🧹 Softban", false], ["note", "📝 Note", false], ["nick", "✏️ Nickname", true], ["role", "🎭 Role", true], ["clearwarns", "🧼 Clear warns", false],
+      ];
+      const DANGER = new Set(["kick", "ban", "tempban", "softban", "clearwarns"]);
+
+      async function showMember(m) {
+        picked = m;
+        clear(panel);
+        const muted = m.mutedUntil && new Date(m.mutedUntil) > Date.now();
+        const roleNames = (m.roles || []).map((id) => (G.roles.find((r) => r.id === id) || {}).name).filter(Boolean);
+        const info = h("div", { class: "hint", style: "margin-top:0.6rem" }, "Loading history…");
+        const recent = h("div");
+        panel.append(card(null, null,
+          h("div", { class: "mhead" }, h("img", { class: "mav", src: m.avatar, alt: "" }), h("div", { style: "min-width:0;overflow-wrap:anywhere" }, h("strong", null, m.name), h("div", { class: "hint" }, "@" + m.username + " · " + m.id))),
+          h("div", { class: "perm-row" }, m.bot ? pill("bot") : null, m.inServer ? null : pill("not in this server", "warn"), muted ? pill("muted until " + new Date(m.mutedUntil).toLocaleString(), "warn") : null, m.joinedAt ? pill("joined " + ago(new Date(m.joinedAt).getTime())) : null),
+          roleNames.length ? h("div", { class: "tags", style: "margin-top:0.6rem" }, roleNames.slice(0, 10).map((n) => h("span", { class: "tag", style: "padding-right:0.7rem" }, "@" + n))) : null,
+          info, recent));
+        const actsBox = h("div", { class: "acts" });
+        const form = h("div");
+        panel.append(card("Take action", null, actsBox, form));
+        let act = null;
+        const drawActs = () => {
+          clear(actsBox);
+          for (const [id, label, inGuild] of ACTS) {
+            if (inGuild && !m.inServer) continue;
+            actsBox.append(h("button", { type: "button", class: "tab", "aria-pressed": String(act === id), onclick: () => { act = id; drawActs(); drawForm(); } }, label));
           }
-          save(guild, {
-            rrPublish: {
-              mode: rrMode.value,
-              channelId: rrChannel.value,
-              title: rrTitle.value.trim() || "Pick your roles",
-              description: rrDesc.value.trim(),
-              exclusive: rrExclusive.checked,
-              roles: rrPicked.map((r) => ({
-                roleId: r.roleId,
-                emoji: r.emoji || "🔘",
-                description: r.description,
-              })),
-            },
-          });
-        })
-      ));
-    }
+        };
+        const refresh = async () => {
+          try { const { members } = await api("/api/user/mod/members?guild=" + G.id + "&q=" + m.id); showMember(members[0] || m); } catch { showMember(m); }
+        };
+        const drawForm = () => {
+          clear(form);
+          if (!act) return form.append(h("p", { class: "hint" }, "Pick an action above."));
+          const needReason = act === "warn" || act === "note";
+          const reason = h("input", { class: "in nodirty", maxlength: "400", placeholder: needReason ? "Reason (required)" : "Reason (optional)" });
+          const dur = act === "mute" ? durInput(36e5, 28 * 864e5) : act === "tempban" ? durInput(3 * 864e5, 365 * 864e5) : null;
+          const days = act === "ban" ? h("select", { class: "select" }, [["0", "Keep their messages"], ["1", "Delete the last day of messages"], ["7", "Delete the last 7 days of messages"]].map(([v, l]) => h("option", { value: v }, l))) : null;
+          const nick = act === "nick" ? h("input", { class: "in nodirty", maxlength: "32", placeholder: "New nickname (empty = reset)" }) : null;
+          const roleSel = act === "role" ? h("select", { class: "select" }, h("option", { value: "" }, "Pick a role…"), G.roles.map((r) => h("option", { value: r.id }, "@" + r.name))) : null;
+          const rmode = act === "role" ? h("select", { class: "select" }, h("option", { value: "add" }, "Give the role"), h("option", { value: "remove" }, "Take the role away")) : null;
+          const label = (ACTS.find((a) => a[0] === act) || [])[1] || act;
+          form.append(
+            dur ? field("Length", dur.el) : null, days ? field("Messages", days) : null, nick ? field("Nickname", nick) : null,
+            roleSel ? field("Role", roleSel) : null, rmode ? field("What to do", rmode) : null,
+            act === "nick" || act === "role" || act === "clearwarns" ? null : field("Reason", reason),
+            h("div", { class: "btn-row" }, h("button", { type: "button", class: "btn btn-sm " + (DANGER.has(act) ? "btn-danger" : ""), onclick: async (ev) => {
+              const p = { userId: m.id };
+              if (act !== "nick" && act !== "role" && act !== "clearwarns") { p.reason = reason.value.trim(); if (needReason && !p.reason) return toast("Write a reason"); }
+              if (dur) p.durationMs = dur.get();
+              if (days) p.deleteDays = Number(days.value);
+              if (nick) p.nick = nick.value.trim();
+              if (roleSel) { if (!roleSel.value) return toast("Pick a role"); p.roleId = roleSel.value; p.mode = rmode.value; }
+              if (DANGER.has(act) && !confirm(label + " " + m.name + "?")) return;
+              ev.target.disabled = true;
+              const res = await modAct(act, p);
+              ev.target.disabled = false;
+              if (res && res.ok) refresh();
+            } }, label.replace(/^\S+\s/, "") + " " + m.name)));
+        };
+        drawActs(); drawForm();
 
-    // ---------- Admin panel (admins only) ----------
+        try {
+          const r = await api("/api/user/mod/cases?guild=" + G.id + "&user=" + m.id);
+          Object.assign(NAMES, Object.fromEntries(Object.entries(r.names || {}).filter(([, v]) => v)));
+          info.textContent = r.activeWarnings + " active warning" + (r.activeWarnings === 1 ? "" : "s") + " · " + r.cases.length + (r.more ? "+" : "") + " case" + (r.cases.length === 1 ? "" : "s") + " on record";
+          for (const c of r.cases.slice(0, 5)) recent.append(caseCard(c, refresh));
+          if (r.cases.length) recent.append(h("div", { class: "btn-row" }, h("button", { type: "button", class: "btn btn-sm btn-secondary", onclick: () => { casesUser = m.id; show("mod-cases"); } }, "See all cases for " + m.name)));
+        } catch (e) { info.textContent = "Couldn't load history: " + e.message; }
+        panel.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+      drawTabs();
+    };
 
-    function openAdmin() {
-      const f = $("admin-frame");
-      if (!f.getAttribute("src")) f.setAttribute("src", "admin.html?embed=1");
-    }
+    // ----- Moderation: cases -----
+    let casesUser = "";
+    RENDER["mod-cases"] = () => {
+      if (needManage()) return;
+      let type = "", before = 0, userId = casesUser;
+      casesUser = "";
+      const summary = h("div", { class: "stats" });
+      const chips = h("div", { class: "chips" });
+      const uchip = h("div");
+      const list = h("div");
+      const more = h("button", { type: "button", class: "btn btn-sm btn-secondary", hidden: true }, "Load older");
+      $("pane").append(card(null, null, summary, chips, uchip), card(null, null, list, h("div", { class: "btn-row" }, more)));
+
+      const drawChips = () => {
+        clear(chips);
+        for (const t of ["", ...Object.keys(TYPE_EMOJI)]) {
+          chips.append(h("button", { type: "button", class: "tab", "aria-pressed": String(type === t), onclick: () => { type = t; load(true); } }, t ? TYPE_EMOJI[t] + " " + t : "All"));
+        }
+        clear(uchip);
+        if (userId) uchip.append(h("p", { class: "meta tight" }, "Showing only " + nameOf(userId) + " ", h("button", { type: "button", class: "btn btn-sm btn-secondary", onclick: () => { userId = ""; load(true); } }, "Show everyone")));
+      };
+      async function load(fresh) {
+        if (fresh) { before = 0; clear(list); }
+        drawChips();
+        more.hidden = true;
+        try {
+          const r = await api("/api/user/mod/cases?guild=" + G.id + (userId ? "&user=" + userId : "") + (type ? "&type=" + type : "") + (before ? "&before=" + before : ""));
+          Object.assign(NAMES, Object.fromEntries(Object.entries(r.names || {}).filter(([, v]) => v)));
+          if (r.counts) {
+            clear(summary).append(stat("Warnings", fmtNum(r.counts.warn)), stat("Mutes", fmtNum(r.counts.mute)), stat("Kicks", fmtNum(r.counts.kick)), stat("Bans", fmtNum((r.counts.ban || 0) + (r.counts.tempban || 0) + (r.counts.softban || 0))));
+          } else if (userId && fresh) clear(summary).append(stat("Active warnings", fmtNum(r.activeWarnings)));
+          for (const c of r.cases) list.append(caseCard(c, () => load(true)));
+          if (!list.firstChild) list.append(h("p", { class: "hint" }, "No cases match."));
+          if (r.cases.length) before = r.cases[r.cases.length - 1].id;
+          more.hidden = !r.more;
+        } catch (e) { list.append(h("p", { class: "hint" }, e.message)); }
+      }
+      more.onclick = () => load(false);
+      load(true);
+    };
+
+    // ----- Moderation: channel tools -----
+    RENDER["mod-tools"] = () => {
+      if (needManage()) return;
+      const ch = h("select", { class: "select" }, G.channels.filter((c) => c.type !== 4).map((c) => h("option", { value: c.id }, cname(c))));
+      const chosen = () => ch.value;
+      const slow = h("select", { class: "select" }, [["0", "Off"], ["5", "5 seconds"], ["10", "10 seconds"], ["30", "30 seconds"], ["60", "1 minute"], ["300", "5 minutes"], ["900", "15 minutes"], ["3600", "1 hour"], ["21600", "6 hours"]].map(([v, l]) => h("option", { value: v }, l)));
+      const lockReason = h("input", { class: "in", maxlength: "300", placeholder: "Reason (optional)" });
+      const count = numInput(20, 1, 100);
+      const who = h("input", { class: "in", inputmode: "numeric", placeholder: "Only this user ID (optional)" });
+      const bots = toggleRow("Only bot messages", null, false);
+      const run = async (e, action, payload, ask) => {
+        if (ask && !confirm(ask)) return;
+        e.target.disabled = true;
+        await modAct(action, payload);
+        e.target.disabled = false;
+      };
+      $("pane").append(
+        card("Channel", "The tools below act on this channel.", field("Channel", ch)),
+        h("div", { class: "cols" },
+          card("Slowmode", "Members must wait between messages.", field("Delay", slow), h("div", { class: "btn-row" }, h("button", { type: "button", class: "btn btn-sm", onclick: (e) => run(e, "slowmode", { channelId: chosen(), seconds: Number(slow.value) }) }, "Set slowmode"))),
+          card("Lock", "Stops @everyone from sending messages. Moderator roles and I can still talk.", field("Reason", lockReason),
+            h("div", { class: "btn-row" }, h("button", { type: "button", class: "btn btn-sm btn-danger", onclick: (e) => run(e, "lock", { channelId: chosen(), reason: lockReason.value.trim() }, "Lock this channel?") }, "🔒 Lock"), h("button", { type: "button", class: "btn btn-sm btn-secondary", onclick: (e) => run(e, "unlock", { channelId: chosen(), reason: lockReason.value.trim() }) }, "🔓 Unlock")))),
+        card("Purge", "Bulk-deletes recent messages (not older than 14 days). Pinned messages stay.", h("div", { class: "grid2" }, field("How many (1–100)", count), field("Filter", who)), bots.el,
+          h("div", { class: "btn-row" }, h("button", { type: "button", class: "btn btn-sm btn-danger", onclick: (e) => {
+            let n; try { n = rng(count, 1, 100, "Message count"); } catch (er) { return toast(er.message); }
+            run(e, "purge", { channelId: chosen(), count: n, filterUserId: who.value.trim() || null, bots: bots.get() }, "Delete up to " + n + " messages?");
+          } }, "🧹 Purge")))
+      );
+    };
+
+    // ----- Admin (iframe) -----
+    RENDER.admin = () => {
+      const f = h("iframe", { class: "admin-frame", title: "Admin panel", scrolling: "no", src: "admin.html?embed=1" });
+      $("pane").append(f);
+    };
     window.addEventListener("message", (ev) => {
       if (ev.origin !== location.origin) return;
       const d = ev.data || {};
-      if (d.type === "overlord-admin-height") $("admin-frame").style.height = Math.max(300, Number(d.height) || 0) + "px";
+      const f = document.querySelector(".admin-frame");
+      if (d.type === "overlord-admin-height" && f) f.style.height = Math.max(300, Number(d.height) || 0) + "px";
       if (d.type === "overlord-toast") toast(String(d.msg || ""));
     });
 
     // ---------- Start ----------
-
     async function boot() {
       if (!getToken()) return;
       try {
@@ -643,19 +1042,25 @@
         return;
       }
       const name = me.user.global_name || me.user.username;
-      $("status").textContent = "Logged in as " + name + (me.isOwner ? " (owner)" : me.isAdmin ? " (admin)" : "");
-      $("scope-note").hidden = true;
-      $("login").hidden = true;
-      $("logout").hidden = false;
+      $("hero").hidden = true;
       $("panel").hidden = false;
+      $("who").textContent = "Logged in as " + name + (me.isOwner ? " (owner)" : me.isAdmin ? " (admin)" : "");
 
-      TABS = [["stats", "📊 My stats"], ["settings", "⚙️ Server settings"]];
-      if (me.isAdmin) TABS.push(["admin", "🛡️ Admin"]);
-      showTab("stats");
-      loadServers(false);
+      try {
+        servers = (await api("/api/user/stats")).servers || [];
+      } catch (e) {
+        if (/Log in again/i.test(e.message)) {
+          await new Promise((r) => setTimeout(r, 2500));
+          try { servers = (await api("/api/user/stats")).servers || []; } catch { /* handled below */ }
+        }
+      }
+      const want = location.hash.slice(1);
+      const start = TITLES[want] ? want : "stats";
+      const gid = fillPicker();
+      if (gid) { await loadGuild(gid); }
+      show(start, true);
     }
-
     boot();
   </script>
 </body>
-  </html>
+</html>

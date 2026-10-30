@@ -4,15 +4,15 @@
   <meta name="google-site-verification" content="eRK5m3yVKrkN8oUPL3krK8RsOA0tPudHCQw-Tc80TbI" />
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>The Overlord — Discord Economy, World Campaign &amp; Realm Bot</title>
-  <meta name="description" content="Discord bot with a shared realm: economy, stocks, World Campaign map, daily Gazette newspaper, raids, wars, and !! commands. Free to add." />
+  <title>The Overlord — Discord Economy, Moderation &amp; World Campaign Bot</title>
+  <meta name="description" content="Discord bot with a shared realm: economy, stocks, World Campaign map, daily Gazette, raids, wars, and a full moderation toolkit (warn, mute, ban, automod, anti-raid). Free to add." />
   <meta name="theme-color" content="#e0b84a" />
   <link rel="canonical" href="https://thefallenstargg.github.io/Overlord-Website/" />
   <link rel="stylesheet" href="styles.css" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="The Overlord" />
-  <meta property="og:title" content="The Overlord — Discord Economy, World Campaign &amp; Realm Bot" />
-  <meta property="og:description" content="Shared realm economy, global Campaign map, daily Gazette paper, stocks, raids, and more. Commands use !!." />
+  <meta property="og:title" content="The Overlord — Discord Economy, Moderation &amp; World Campaign Bot" />
+  <meta property="og:description" content="Shared realm economy, global Campaign map, daily Gazette paper, stocks, raids, plus full server moderation. Free." />
   <meta property="og:image" content="https://thefallenstargg.github.io/Overlord-Website/og-image.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
@@ -25,7 +25,7 @@
     "name": "The Overlord",
     "applicationCategory": "GameApplication",
     "operatingSystem": "Discord",
-    "description": "Discord bot with a shared realm economy, World Campaign, daily Gazette, stocks, raids, and !! commands.",
+    "description": "Discord bot with a shared realm economy, World Campaign, daily Gazette, stocks, raids, and a full moderation toolkit.",
     "url": "https://thefallenstargg.github.io/Overlord-Website/",
     "image": "https://thefallenstargg.github.io/Overlord-Website/og-image.png",
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
@@ -67,6 +67,14 @@
       display: grid; gap: 1rem;
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     }
+    .new-list { margin: 0.75rem 0 0; padding-left: 1.2rem; }
+    .new-list li { margin: 0.4rem 0; }
+    .cmd-row { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.6rem; }
+    .cmd-chip {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.78rem; padding: 0.2rem 0.55rem; border-radius: 8px;
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    }
   </style>
 </head>
 <body>
@@ -75,11 +83,12 @@
   <main class="wrap">
     <!-- Hero -->
     <section class="card hero home-hero">
-      <p class="eyebrow">Discord bot · commands start with !!</p>
+      <p class="eyebrow">Discord bot · commands start with !! (admins can change it)</p>
       <h1>The Overlord</h1>
       <p class="lead">
-        A shared realm for your server: coins, chaos, and a <strong>global Campaign map</strong> every server can fight over.
-        Optional depth — ignore half of it and still have a working economy.
+        A shared realm for your server: coins, chaos, a <strong>global Campaign map</strong> every server can fight over,
+        and a <strong>full moderation toolkit</strong> when you need to keep order.
+        Optional depth — ignore half of it and still have a working bot.
       </p>
       <div class="cta-row home-cta">
         <a class="btn" id="invite-btn" href="#">Add to Discord</a>
@@ -93,10 +102,11 @@
       </div>
       <div class="pill-row" aria-label="Highlights">
         <span class="pill">World Campaign</span>
+        <span class="pill">Moderation &amp; automod</span>
         <span class="pill">Daily Gazette</span>
         <span class="pill">Stocks &amp; bank</span>
         <span class="pill">Raids &amp; wars</span>
-        <span class="pill">Free · !! commands</span>
+        <span class="pill">Free</span>
       </div>
       <div class="stats" style="margin-top:1.25rem">
         <div class="stat"><b id="st-servers">—</b><span>Servers</span></div>
@@ -113,6 +123,18 @@
       </div>
     </div>
 
+    <!-- New lately -->
+    <section class="card">
+      <h2 class="section-title">New lately</h2>
+      <ul class="new-list">
+        <li><strong>Moderation toolkit</strong> — warn, mute, kick, ban, tempban, purge, lock, slowmode, mod log, and more. Start with <code>!!modhelp</code>.</li>
+        <li><strong>Automod &amp; anti-raid</strong> — filter invites, links, spam, caps, mass mentions and blocked words; protect against mass joins; optional welcome messages.</li>
+        <li><strong>Custom prefix per server</strong> — admins can change it with <code>!!prefix</code>. <code>!!help</code> always works on <code>!!</code>.</li>
+        <li><strong>Campaign commands are separate</strong> — <code>!!map</code>, <code>!!recruit</code>, <code>!!siege</code> and friends. New? Try <code>!!guide</code>. The Shadow Court AI is also kept on a tighter leash.</li>
+        <li><strong>Better voting</strong> — <code>!!vote</code> after supporting the bot on top.gg: coins plus a short earn boost, and weekends pay more.</li>
+      </ul>
+    </section>
+
     <!-- What it is -->
     <section class="card">
       <h2 class="section-title">What you actually get</h2>
@@ -123,6 +145,14 @@
           <p>
             One shared map. Your server is a house. Take cities, siege neighbors, collect taxes, fight the AI Shadow Court.
             Seasons reset the board. <a href="campaign.html">Live map →</a>
+          </p>
+        </li>
+        <li class="feature-card">
+          <div class="feature-icon">🛡️</div>
+          <h3>Moderation</h3>
+          <p>
+            Warnings, mutes, bans, purge, lock, automod, anti-raid and a mod log — all prefix commands.
+            <a href="#moderation">See what’s included →</a>
           </p>
         </li>
         <li class="feature-card">
@@ -158,10 +188,78 @@
           <div class="feature-icon">🎮</div>
           <h3>Games</h3>
           <p>
-            Wordle, cards, board games, a few gamble commands (admins can disable betting). Prefix is still !! everywhere.
+            Wordle, cards, board games, a few gamble commands (admins can disable betting). Commands use <code>!!</code> by default; admins can change the prefix.
           </p>
         </li>
       </ul>
+    </section>
+
+    <!-- Moderation -->
+    <section class="card" id="moderation">
+      <h2 class="section-title">Moderation for server owners</h2>
+      <p class="meta" style="margin-top:0">
+        A complete toolkit that runs on prefix commands only. Target people by mention, by user ID, or by replying to their message.
+        Every action gets a case number and can be logged to a channel you pick. Run <code>!!modhelp</code> in your server for the full list.
+      </p>
+      <ul class="feature-grid">
+        <li class="feature-card">
+          <div class="feature-icon">⚠️</div>
+          <h3>Warnings &amp; cases</h3>
+          <p>Warnings stack and can trigger automatic actions. Private notes, full history, and editable reasons.</p>
+          <div class="cmd-row">
+            <span class="cmd-chip">!!warn</span><span class="cmd-chip">!!warnings</span><span class="cmd-chip">!!note</span>
+            <span class="cmd-chip">!!history</span><span class="cmd-chip">!!case</span>
+          </div>
+        </li>
+        <li class="feature-card">
+          <div class="feature-icon">🔨</div>
+          <h3>Punishments</h3>
+          <p>Timeouts, kicks, bans (even for users who left), timed bans that lift themselves, and softbans that wipe recent messages.</p>
+          <div class="cmd-row">
+            <span class="cmd-chip">!!mute</span><span class="cmd-chip">!!kick</span><span class="cmd-chip">!!ban</span>
+            <span class="cmd-chip">!!tempban</span><span class="cmd-chip">!!softban</span><span class="cmd-chip">!!unban</span>
+          </div>
+        </li>
+        <li class="feature-card">
+          <div class="feature-icon">🧹</div>
+          <h3>Channel control</h3>
+          <p>Bulk-delete messages with user or bot filters, set slowmode, and lock or unlock a channel in one command.</p>
+          <div class="cmd-row">
+            <span class="cmd-chip">!!purge</span><span class="cmd-chip">!!slowmode</span>
+            <span class="cmd-chip">!!lock</span><span class="cmd-chip">!!unlock</span>
+          </div>
+        </li>
+        <li class="feature-card">
+          <div class="feature-icon">🤖</div>
+          <h3>Automod</h3>
+          <p>Catches invites, links, spam, excessive caps, mass mentions and blocked words. Allow specific domains, ignore channels or roles, and choose delete-only or delete + warn.</p>
+          <div class="cmd-row">
+            <span class="cmd-chip">!!automod</span>
+          </div>
+        </li>
+        <li class="feature-card">
+          <div class="feature-icon">🚨</div>
+          <h3>Anti-raid &amp; welcome</h3>
+          <p>Join-spike protection, a minimum account age filter, optional channel soft-lock and alerts. Plus a welcome message with <code>{user}</code>, <code>{server}</code> and <code>{membercount}</code>.</p>
+          <div class="cmd-row">
+            <span class="cmd-chip">!!antiraid</span><span class="cmd-chip">!!welcome</span>
+          </div>
+        </li>
+        <li class="feature-card">
+          <div class="feature-icon">⚙️</div>
+          <h3>Setup &amp; members</h3>
+          <p>Pick a mod log channel, set moderator roles, and choose automatic actions (like 3 warnings → 1 hour mute). Nicknames, roles and user info included.</p>
+          <div class="cmd-row">
+            <span class="cmd-chip">!!modlog</span><span class="cmd-chip">!!modrole</span><span class="cmd-chip">!!modconfig</span>
+            <span class="cmd-chip">!!nick</span><span class="cmd-chip">!!role</span><span class="cmd-chip">!!userinfo</span>
+          </div>
+        </li>
+      </ul>
+      <p class="meta">
+        The bot needs the matching Discord permissions (Moderate Members, Kick/Ban Members, Manage Messages, Manage Channels, Manage Roles) to act.
+        If one is missing, it tells you which. Anti-raid also needs the Server Members intent.
+        Full details on the <a href="setup.html">Setup</a> and <a href="commands.html">Commands</a> pages.
+      </p>
     </section>
 
     <!-- First steps -->
@@ -173,7 +271,7 @@
           <ol class="steps">
             <li><code>!!tutorial</code> — short walkthrough</li>
             <li><code>!!daily</code> · <code>!!work</code> · <code>!!balance</code></li>
-            <li><code>!!campaign map</code> — see the world war</li>
+            <li><code>!!guide</code> then <code>!!map</code> — see the world war</li>
             <li><code>!!vote</code> after voting on top.gg (coins every 12h)</li>
           </ol>
         </div>
@@ -182,7 +280,8 @@
           <ol class="steps">
             <li>Invite (Manage Server). Open <a href="setup.html">Setup</a>.</li>
             <li><code>!!events-channel #channel</code> — Gazette &amp; world posts</li>
-            <li><code>!!tutorial admin</code> · <code>!!settings</code></li>
+            <li><code>!!modhelp</code> · <code>!!modlog #channel</code> · <code>!!modrole add @role</code></li>
+            <li><code>!!tutorial admin</code> · <code>!!settings</code> · <code>!!prefix</code> (optional)</li>
             <li>Optional: <code>!!raid-config optout</code> if you don’t want raids</li>
           </ol>
         </div>

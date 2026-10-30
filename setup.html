@@ -2,15 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Set Up The Overlord Discord Bot — Invite, Settings & Realm Board</title>
-  <meta name="description" content="Invite The Overlord, pick an events channel, turn on the realm board, and configure gambling, rob, and website leaderboards. Admin setup with !!settings and !!tutorial." />  <meta name="theme-color" content="#e0b84a" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Set Up The Overlord Discord Bot — Invite, Moderation &amp; Settings</title>
+  <meta name="description" content="Invite The Overlord, pick an events channel, set up moderation (mod log, moderator roles, automod, anti-raid, welcome), change the prefix, and configure gambling, rob and the realm board." />
+  <meta name="theme-color" content="#e0b84a" />
   <link rel="canonical" href="https://thefallenstargg.github.io/Overlord-Website/setup.html" />
   <link rel="stylesheet" href="styles.css" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="The Overlord" />
-  <meta property="og:title" content="Set Up The Overlord Discord Bot — Invite, Settings & Realm Board" />
-  <meta property="og:description" content="Invite The Overlord, pick an events channel, turn on the realm board, and configure gambling, rob, and website leaderboards. Admin setup with !!settings and !!tutorial." />
+  <meta property="og:title" content="Set Up The Overlord Discord Bot — Invite, Moderation &amp; Settings" />
+  <meta property="og:description" content="Invite The Overlord, set up moderation, automod and anti-raid, change the prefix, and configure the realm board." />
   <meta property="og:image" content="https://thefallenstargg.github.io/Overlord-Website/og-image.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
@@ -18,24 +19,7 @@
   <meta name="twitter:card" content="summary_large_image" />
 </head>
 <body>
-  <header class="site-header">
-    <div class="wrap">
-      <a class="brand" href="index.html">
-        <span class="brand-mark" aria-hidden="true">♛</span>
-        <span class="brand-text">The Overlord</span>
-      </a>
-      <nav>
-        <a href="index.html">Home</a>
-        <a href="commands.html">Commands</a>
-        <a href="changelog.html">Changelog</a>
-        <a href="leaderboards.html">Leaderboards</a>
-        <a class="active" href="setup.html">Setup</a>
-        <a href="terms.html">Terms</a>
-        <a href="privacy.html">Privacy</a>
-        <a class="btn" href="https://discord.com/api/oauth2/authorize?client_id=1555446743515144232&permissions=1099981778134&scope=bot%20applications.commands">Invite</a>
-      </nav>
-    </div>
-  </header>
+  <script src="data.js"></script>
 
   <main class="wrap">
     <section class="card hero">
@@ -43,23 +27,35 @@
       <h1>Setup</h1>
       <p class="lead">
         You need <strong>Manage Server</strong> for most of this. The bot needs permission to see the channel, send messages, and embed links.
+        Commands start with <code>!!</code> unless you change the prefix (see below).
       </p>
     </section>
 
     <section class="card">
       <h2 class="section-title">Invite permissions</h2>
-      <p class="section-sub">The invite is not Administrator. Typical needs:</p>
+      <p class="section-sub">The invite is not Administrator. It asks for:</p>
       <div class="perm-row">
         <span class="perm">View Channel</span>
         <span class="perm">Send Messages</span>
+        <span class="perm">Send Messages in Threads</span>
         <span class="perm">Embed Links</span>
+        <span class="perm">Attach Files</span>
         <span class="perm">Read Message History</span>
         <span class="perm">Add Reactions</span>
+        <span class="perm">Use External Emojis</span>
+        <span class="perm">Manage Messages</span>
+        <span class="perm">Manage Channels</span>
         <span class="perm">Manage Roles</span>
+        <span class="perm">Manage Nicknames</span>
+        <span class="perm">Kick Members</span>
+        <span class="perm">Ban Members</span>
+        <span class="perm">Moderate Members</span>
+        <span class="perm">View Audit Log</span>
       </div>
       <p class="meta">
-        Manage Roles is only required if you link shop titles to Discord roles.
-        Prefix commands need Message Content Intent (already enabled on the application).
+        The moderation permissions (Manage Messages, Manage Channels, Manage Roles, Manage Nicknames, Kick, Ban, Moderate Members) are only used when someone runs a moderation command or you turn on automod or anti-raid.
+        If one is missing the bot tells you which. Role order matters: the bot’s role must sit <strong>above</strong> any member or role it needs to moderate, so drag it up in Server Settings → Roles.
+        Prefix commands need the Message Content intent, and anti-raid and welcome messages need the Server Members intent. Both are already enabled on the bot’s application.
       </p>
     </section>
 
@@ -79,10 +75,83 @@
           <strong>Level-ups</strong> (optional):
           <br /><code>!!settings levels #channel</code>
         </li>
+        <li>
+          <strong>Campaign map</strong> (optional) — a live World Campaign map message:
+          <br /><code>!!mapchannel #channel</code>
+        </li>
       </ol>
       <p class="meta">
         Events channel = stream of posts. Board = single updating post. You can use both.
       </p>
+    </section>
+
+    <section class="card" id="moderation">
+      <h2 class="section-title">Moderation</h2>
+      <p class="section-sub">
+        A full toolkit, prefix commands only (no slash). Run <code>!!modhelp</code> any time for the complete list.
+        Set up these four things first:
+      </p>
+      <ol class="steps">
+        <li>
+          <strong>Mod log</strong> — where every action is recorded with a case number:
+          <br /><code>!!modlog #mod-log</code>
+        </li>
+        <li>
+          <strong>Moderator role</strong> — lets that role warn, mute, purge, lock and set slowmode without extra Discord permissions (kick, ban, nick and role changes still need the real Discord permission):
+          <br /><code>!!modrole add @Moderators</code>
+        </li>
+        <li>
+          <strong>Automatic actions</strong> — for example 3 warnings → 1 hour mute:
+          <br /><code>!!modconfig warnaction 3 mute 1h</code>
+          <br />Turn DMs to the people the bot acts on off or on with <code>!!modconfig dm on|off</code>.
+        </li>
+        <li>
+          <strong>Automod</strong> — checks messages for you. Staff are never checked.
+          <br /><code>!!automod invites on</code> · <code>!!automod spam on</code> · <code>!!automod punish warn</code>
+        </li>
+      </ol>
+      <div class="cmd-table">
+        <div><code>!!warn @user reason</code> <span>Warn (also <code>!!warnings</code>, <code>!!delwarn</code>, <code>!!clearwarns</code>, <code>!!note</code>)</span></div>
+        <div><code>!!mute @user 2h reason</code> <span>Timeout up to 28 days (<code>!!unmute</code> ends it)</span></div>
+        <div><code>!!kick</code> · <code>!!ban</code> · <code>!!tempban @user 3d</code> · <code>!!softban</code> · <code>!!unban id</code> <span>Removals. Ban works on any user ID, even if they left.</span></div>
+        <div><code>!!purge 20 [@user|bots]</code> <span>Bulk delete (not older than 14 days, pinned messages stay)</span></div>
+        <div><code>!!slowmode 10s</code> · <code>!!lock</code> · <code>!!unlock</code> <span>Channel control</span></div>
+        <div><code>!!history @user</code> · <code>!!case 12</code> · <code>!!reason 12 new text</code> <span>Records</span></div>
+        <div><code>!!nick</code> · <code>!!role add|remove</code> · <code>!!userinfo</code> <span>Members</span></div>
+      </div>
+      <p class="meta">
+        Everything works by mention, by pasting a user ID, or by replying to the person’s message.
+        The bot refuses to act on people above it or above you in the role list, and on server owners.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2 class="section-title">Automod, anti-raid &amp; welcome</h2>
+      <div class="cmd-table">
+        <div><code>!!automod</code> <span>Shows every rule and its current setting</span></div>
+        <div><code>!!automod invites|links|spam|caps|mentions|words on|off</code> <span>Switch rules on or off</span></div>
+        <div><code>!!automod punish delete|warn</code> <span>Delete only, or delete and add a warning</span></div>
+        <div><code>!!automod words add|remove|list &lt;word&gt;</code> <span>Blocked words (your message is deleted so the list stays private)</span></div>
+        <div><code>!!automod domains add &lt;site.com&gt;</code> <span>Links you allow even when link filtering is on</span></div>
+        <div><code>!!automod ignore #channel</code> or <code>@role</code> <span>Exempt a channel or role (run again to undo)</span></div>
+        <div><code>!!automod spam 5 5</code> · <code>mentions 5</code> · <code>caps 70</code> <span>Tune the limits. Spammers are muted for 5 minutes.</span></div>
+        <div><code>!!antiraid on</code> <span>Join-spike protection (see <code>!!antiraid</code> for threshold, window, account age, action, alert channel and soft-lock)</span></div>
+        <div><code>!!welcome #channel Welcome {user} to {server}!</code> <span>Join message. Tokens: <code>{user}</code> <code>{server}</code> <code>{membercount}</code>. <code>!!welcome test</code> and <code>!!welcome off</code> also work.</span></div>
+      </div>
+      <p class="meta">Automod needs <strong>Manage Messages</strong> in the channels it watches. Anti-raid needs Kick/Ban/Moderate Members, plus Manage Channels if you use soft-lock.</p>
+    </section>
+
+    <section class="card">
+      <h2 class="section-title">Prefix</h2>
+      <p class="section-sub">
+        The default prefix is <code>!!</code>. Admins can change it for their own server:
+      </p>
+      <div class="cmd-table">
+        <div><code>!!prefix</code> <span>Show the current prefix</span></div>
+        <div><code>!!prefix ?</code> <span>Change it (example: <code>?daily</code> afterwards)</span></div>
+        <div><code>!!prefix reset</code> <span>Back to <code>!!</code></span></div>
+      </div>
+      <p class="meta"><code>!!help</code> and <code>!!prefix</code> always work on <code>!!</code>, and <code>!!help</code> shows the current prefix, so nobody gets locked out.</p>
     </section>
 
     <section class="card">
@@ -93,8 +162,19 @@
         <div><code>!!settings command &lt;name&gt; on|off</code> <span>Disable a specific command</span></div>
         <div><code>!!settings ignore #channel</code> <span>Bot stays quiet there (no XP either)</span></div>
         <div><code>!!settings games add #channel</code> <span>Limit games to certain channels</span></div>
+        <div><code>!!raid-config</code> <span>Cross-server raids (category, opt-out)</span></div>
       </div>
       <p class="meta">Run <code>!!settings</code> with no args to see the current config.</p>
+    </section>
+
+    <section class="card">
+      <h2 class="section-title">World Campaign</h2>
+      <ul class="feature-list">
+        <li>Every server becomes a <strong>house</strong> on one shared map the first time someone runs a campaign command.</li>
+        <li><code>!!guide</code> explains everything. Players start with <code>!!map</code> and <code>!!recruit &lt;city&gt; &lt;amount&gt;</code>.</li>
+        <li><code>!!mapchannel #channel</code> keeps a live map message updated (Manage Server).</li>
+        <li>Your server’s name and score are shown publicly on the <a href="campaign.html">Campaign page</a>.</li>
+      </ul>
     </section>
 
     <section class="card">
@@ -102,22 +182,11 @@
       <ul class="feature-list">
         <li><code>!!edittitles</code> — custom titles in the shop (and optional role links)</li>
         <li><code>!!reactionroles</code> — reaction role panels</li>
-        <li><code>!!tutorial</code> — points new people at the basics</li>
+        <li><code>!!tutorial</code> and <code>!!tutorial admin</code> — point new people at the basics</li>
+        <li><code>!!deletedata</code> — erase this server’s Bot data (asks you to confirm)</li>
         <li>Help: <a href="https://discord.gg/vZrsPCMHys" target="_blank" rel="noopener">Support server</a> or <code>!!support</code> in Discord</li>
       </ul>
     </section>
   </main>
-
-  <footer class="site-footer">
-    <div class="wrap">
-      <p>
-        © 2026 The Overlord ·
-        <a href="commands.html">Commands</a> ·
-        <a href="terms.html">Terms</a> ·
-        <a href="privacy.html">Privacy</a>
-      </p>
-    </div>
-  </footer>
-  <script src="data.js"></script>
 </body>
 </html>

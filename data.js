@@ -2,7 +2,7 @@
 (function () {
   // The bot keeps these files up to date on the "data" branch of this repo
   const DATA_BASE = 'https://raw.githubusercontent.com/TheFallenStarGG/Overlord-Website/data/';
-  const INVITE = 'https://discord.com/api/oauth2/authorize?client_id=1555446743515144232&permissions=1099981778134&scope=bot%20applications.commands';
+  const INVITE = 'https://discord.com/api/oauth2/authorize?client_id=1555446743515144232&permissions=1374859685078&scope=bot%20applications.commands';
   const SUPPORT = 'https://discord.gg/vZrsPCMHys';
   const TOPGG = 'https://top.gg/bot/1555446743515144232';
   const TOPGG_VOTE = 'https://top.gg/bot/1555446743515144232/vote';
@@ -173,8 +173,8 @@
         el('div', { class: 'foot-grid' },
           el('div', { class: 'foot-brand' },
             el('a', { class: 'brand', href: 'index.html' }, brandMark(), el('span', { class: 'brand-text', text: 'The Overlord' })),
-            el('p', { class: 'foot-blurb', text: 'A Discord bot with a server economy, a living realm, duels, bosses and a stock market.' })),
-            col('Explore', inFooter(['commands.html', 'wiki.html', 'leaderboards.html', 'stocks.html', 'servers.html', 'wars.html', 'campaign.html', 'gazette.html'])),
+            el('p', { class: 'foot-blurb', text: 'A Discord bot with a server economy, a living realm, a global World Campaign, duels, bosses, stocks and full server moderation.' })),
+      col('Explore', inFooter(['commands.html', 'wiki.html', 'leaderboards.html', 'stocks.html', 'servers.html', 'wars.html', 'campaign.html', 'gazette.html'])),
            col('More', inFooter(['status.html', 'changelog.html', 'setup.html', 'dashboard.html'])),
           col('Help', [
             ['Support server', SUPPORT, true],

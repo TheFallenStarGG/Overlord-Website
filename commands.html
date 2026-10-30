@@ -3,15 +3,15 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>The Overlord Commands — Economy, Raids, Stocks, Duels & More</title>
-  <meta name="description" content="Full searchable command list for The Overlord Discord bot: !!work, !!stocks, !!raid, !!bank, !!bounty, !!war, crafting, duels, and the rest. Prefix !! (slash is experimental)." />
+  <title>The Overlord Commands — Economy, Moderation, Campaign, Raids &amp; More</title>
+  <meta name="description" content="Full searchable command list for The Overlord Discord bot: economy, stocks, raids, the World Campaign, duels, and a complete moderation toolkit (!!warn, !!mute, !!ban, !!automod, !!antiraid). Default prefix !! (admins can change it; slash is experimental)." />
   <link rel="canonical" href="https://thefallenstargg.github.io/Overlord-Website/commands.html" />
   <meta name="theme-color" content="#e0b84a" />
   <link rel="stylesheet" href="styles.css" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="The Overlord" />
-  <meta property="og:title" content="The Overlord Commands — Economy, Raids, Stocks, Duels & More" />
-  <meta property="og:description" content="Full searchable command list for The Overlord Discord bot: !!work, !!stocks, !!raid, !!bank, !!bounty, !!war, crafting, duels, and the rest. Prefix !! (slash is experimental)." />
+  <meta property="og:title" content="The Overlord Commands — Economy, Moderation, Campaign, Raids &amp; More" />
+  <meta property="og:description" content="Full searchable command list for The Overlord Discord bot, including the moderation toolkit and the World Campaign." />
   <meta property="og:image" content="https://thefallenstargg.github.io/Overlord-Website/og-image.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
@@ -26,7 +26,7 @@
       <p class="eyebrow">Command list</p>
       <h1>Commands</h1>
       <p class="lead" id="lead">
-        Every command starts with <code>!!</code>. Tap a command to copy it. This page builds itself from the bot, so it is always up to date.
+        Commands start with <code>!!</code> by default (admins can change it per server with <code>!!prefix</code>). Tap a command to copy it. This page builds itself from the bot, so it is always up to date.
       </p>
     </section>
 
@@ -94,7 +94,9 @@
         cats = data.categories;
         document.getElementById('lead').replaceChildren(
           el('strong', { text: data.total + ' commands. ' }),
-          'Every command starts with ', el('code', { text: '!!' }), '. Tap a command to copy it.');
+          'Commands start with ', el('code', { text: '!!' }),
+          ' by default (admins can change it per server with ', el('code', { text: '!!prefix' }),
+          '). Tap a command to copy it.');
         const preset = new URLSearchParams(location.search).get('q');
         if (preset) search.value = preset;
         drawChips();

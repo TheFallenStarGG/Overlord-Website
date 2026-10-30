@@ -2190,3 +2190,32 @@ a.lb-row:hover {
 .news-ticker-track {
   white-space: nowrap;
 }
+/* ---- Fixes: command rows and dropdowns ---- */
+.cmd-table { display: grid; gap: 0; }
+.cmd-table > div {
+  display: block;
+  padding: 0.7rem 0;
+  line-height: 1.9;
+}
+.cmd-table > div > span {
+  display: block;
+  margin-top: 0.1rem;
+  line-height: 1.5;
+}
+/* rows that are "name + value" (admin stats) stay in two columns */
+.cmd-table > div:has(> strong:first-child) {
+  display: grid;
+  grid-template-columns: minmax(8rem, 17rem) 1fr;
+  gap: 0.5rem 1rem;
+  align-items: baseline;
+  line-height: 1.5;
+}
+.cmd-table > div:has(> strong:first-child) > span { margin-top: 0; }
+
+.select, .search, .field input, .field textarea {
+  min-width: 0;
+  max-width: 100%;
+}
+.select { text-overflow: ellipsis; }
+.picker > * { min-width: 0; }
+.card, .wrap, main { min-width: 0; }
